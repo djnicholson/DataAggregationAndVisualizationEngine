@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DaAVE.Library", "DaAVE.Library\DaAVE.Library.csproj", "{AB831A3A-1CA5-4D62-9FC6-D54C3F7679A1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAaVE.Library", "DaAVE.Library\DAaVE.Library.csproj", "{AB831A3A-1CA5-4D62-9FC6-D54C3F7679A1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

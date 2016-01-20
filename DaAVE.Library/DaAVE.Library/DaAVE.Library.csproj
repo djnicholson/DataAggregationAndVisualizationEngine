@@ -7,8 +7,8 @@
     <ProjectGuid>{AB831A3A-1CA5-4D62-9FC6-D54C3F7679A1}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DaAVE.Library</RootNamespace>
-    <AssemblyName>DaAVE.Library</AssemblyName>
+    <RootNamespace>DAaVE.Library</RootNamespace>
+    <AssemblyName>DAaVE.Library</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -24,7 +24,7 @@
     <CodeAnalysisIgnoreGeneratedCode>false</CodeAnalysisIgnoreGeneratedCode>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <DocumentationFile>bin\Debug\DaAVE.Library.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\DAaVE.Library.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -34,6 +34,15 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DelaySign>false</DelaySign>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>dummy.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -46,7 +55,25 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataAggregation\AggregatedDataPoint.cs" />
+    <Compile Include="DataAggregation\Aggregators\AverageBySecondDataPointAggregator.cs" />
+    <Compile Include="DataAggregation\DataAggregationOrchestrator.cs" />
+    <Compile Include="DataAggregation\DataAggregationThread.cs" />
+    <Compile Include="DataAggregation\IDataPointAggregator.cs" />
+    <Compile Include="DataCollection\DataCollectionOrchestrator.cs" />
+    <Compile Include="DataCollection\DataCollectorAttribute.cs" />
+    <Compile Include="DataCollection\DataCollectorPollerThread.cs" />
+    <Compile Include="DataCollection\IDataCollector.cs" />
+    <Compile Include="DataPoint.cs" />
+    <Compile Include="ErrorHandling\ErrorSinks\ConsoleErrorSink.cs" />
+    <Compile Include="ErrorHandling\IErrorSink.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Storage\IDataPointFireHose.cs" />
+    <Compile Include="Storage\IDataPointPager.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="dummy.snk" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
