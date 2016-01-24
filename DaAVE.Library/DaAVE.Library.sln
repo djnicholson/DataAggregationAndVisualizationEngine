@@ -5,6 +5,8 @@ VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAaVE.Library", "DaAVE.Library\DAaVE.Library.csproj", "{AB831A3A-1CA5-4D62-9FC6-D54C3F7679A1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAaVE.Storage.Azure", "DAaVE.Storage.Azure\DAaVE.Storage.Azure.csproj", "{3EF4D74D-E5D4-4EE7-A2F6-C9054808DCE4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{AB831A3A-1CA5-4D62-9FC6-D54C3F7679A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AB831A3A-1CA5-4D62-9FC6-D54C3F7679A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AB831A3A-1CA5-4D62-9FC6-D54C3F7679A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3EF4D74D-E5D4-4EE7-A2F6-C9054808DCE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3EF4D74D-E5D4-4EE7-A2F6-C9054808DCE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3EF4D74D-E5D4-4EE7-A2F6-C9054808DCE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3EF4D74D-E5D4-4EE7-A2F6-C9054808DCE4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
