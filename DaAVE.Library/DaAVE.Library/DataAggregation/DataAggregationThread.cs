@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 
 namespace DAaVE.Library.DataAggregation
 {
-    internal class DataAggregationThread<DataPointType> : IDisposable
-        where DataPointType : struct, IComparable, IFormattable
+    internal class DataAggregationThread<TDataPointType> : IDisposable
+        where TDataPointType : struct, IComparable, IFormattable
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA2204:Literals should be spelled correctly", MessageId = "TDataPointTypeEnum")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
         static DataAggregationThread()
         {
-            if (!typeof(DataPointType).IsEnum)
+            if (!typeof(TDataPointType).IsEnum)
             {
                 throw new NotSupportedException("TDataPointTypeEnum parameter must be an enum");
             }
@@ -24,14 +24,13 @@ namespace DAaVE.Library.DataAggregation
         private ManualResetEventSlim shutdownStart = new ManualResetEventSlim(false);
 
         internal DataAggregationThread(
-            DataPointType type,
+            TDataPointType type,
             IDataPointAggregator aggregator,
-            IDataPointPager<DataPointType> pager,
-            IDataPointFireHose<DataPointType> aggregatedDataReceiver,
+            IDataPointPager<TDataPointType> pager,
             IErrorSink errorSink)
         {
 
-            object continuationToken = null;
+            object continuationTokenCurrent = null;
 
             int consecutiveErrorCount = 0;
 
@@ -41,12 +40,12 @@ namespace DAaVE.Library.DataAggregation
                 {
                     while (true)
                     {
-                        object newContinuationToken = continuationToken;
+                        object continuationTokenNext = continuationTokenCurrent;
 
                         IEnumerable<DataPoint> pageOfUnaggregatedData;
                         do
                         {
-                            pageOfUnaggregatedData = pager.NextPage(type, ref newContinuationToken);
+                            pageOfUnaggregatedData = pager.ReadPageOfRawData(type, ref continuationTokenNext);
 
                             if (pageOfUnaggregatedData.Count() == 0)
                             {
@@ -60,15 +59,15 @@ namespace DAaVE.Library.DataAggregation
 
                         IEnumerable<AggregatedDataPoint> aggregatedData = aggregator.Aggregate(pageOfUnaggregatedData);
 
-                        aggregatedDataReceiver.ProcessAggregatedData(type, aggregatedData, pager, newContinuationToken);
+                        pager.StoreAggregatedData(type, aggregatedData, continuationTokenNext);
 
-                        continuationToken = newContinuationToken;
+                        continuationTokenCurrent = continuationTokenNext;
                         consecutiveErrorCount = 0;
                     }
                 }
                 catch (Exception e)
                 {
-                    errorSink.OnError("Exception when aggregating page of data of type: " + type + "@" + continuationToken, e);
+                    errorSink.OnError("Exception when aggregating page of data of type: " + type + "@" + continuationTokenCurrent, e);
 
                     consecutiveErrorCount++;
                     if (consecutiveErrorCount > 20)

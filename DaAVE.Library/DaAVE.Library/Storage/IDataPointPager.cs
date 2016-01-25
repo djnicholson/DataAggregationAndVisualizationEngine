@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DAaVE.Library.DataAggregation;
+using System;
 using System.Collections.Generic;
 
 namespace DAaVE.Library.Storage
@@ -22,6 +23,20 @@ namespace DAaVE.Library.Storage
         /// <returns>A set of raw data points suitable for aggregation</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1007:UseGenericsWhereAppropriate")]
-        IEnumerable<DataPoint> NextPage(TDataPointTypeEnum type, ref object continuationToken);
+        IEnumerable<DataPoint> ReadPageOfRawData(TDataPointTypeEnum type, ref object continuationToken);
+
+        /// <summary>
+        /// Store a stream of aggregated data points of a specific type.
+        /// </summary>
+        /// <param name="type">The type of data point that was aggregated.</param>
+        /// <param name="aggregatedDataPoints">The aggregated values.</param>
+        /// <param name="continuationToken">
+        /// The continuation token that was returned from <see cref="ReadPageOfRawData"/> when the raw
+        /// data was received.
+        /// </param>
+        void StoreAggregatedData(
+            TDataPointTypeEnum type,
+            IEnumerable<AggregatedDataPoint> aggregatedDataPoints,
+            object continuationToken);
     }
 }

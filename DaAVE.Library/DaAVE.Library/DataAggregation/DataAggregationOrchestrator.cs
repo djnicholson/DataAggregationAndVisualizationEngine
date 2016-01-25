@@ -46,7 +46,6 @@ namespace DAaVE.Library.DataAggregation
         public DataAggregationOrchestrator(
             IDataPointAggregator aggregator,
             IDataPointPager<TDataPointTypeEnum> pager,
-            IDataPointFireHose<TDataPointTypeEnum> aggregationReceiver,
             IErrorSink errorSink)
         {
             foreach (TDataPointTypeEnum dataType in Enum.GetValues(typeof(TDataPointTypeEnum)).Cast<TDataPointTypeEnum>())
@@ -55,7 +54,6 @@ namespace DAaVE.Library.DataAggregation
                     dataType,
                     aggregator,
                     pager,
-                    aggregationReceiver,
                     errorSink);
 
                 this.aggregationThreads.Add(dataType, newThread);
@@ -73,6 +71,7 @@ namespace DAaVE.Library.DataAggregation
             }
         }
 
-        private IDictionary<TDataPointTypeEnum, DataAggregationThread<TDataPointTypeEnum>> aggregationThreads = new Dictionary<TDataPointTypeEnum, DataAggregationThread<TDataPointTypeEnum>>();
+        private IDictionary<TDataPointTypeEnum, DataAggregationThread<TDataPointTypeEnum>> aggregationThreads = 
+            new Dictionary<TDataPointTypeEnum, DataAggregationThread<TDataPointTypeEnum>>();
     }
 }

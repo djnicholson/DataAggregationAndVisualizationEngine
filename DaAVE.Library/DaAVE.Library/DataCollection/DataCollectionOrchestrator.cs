@@ -2,6 +2,7 @@
 using DAaVE.Library.Storage;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -30,8 +31,8 @@ namespace DAaVE.Library.DataCollection
     public sealed class DataCollectionOrchestrator<TDataPointTypeEnum> : IDisposable
         where TDataPointTypeEnum : struct, IComparable, IFormattable
     {
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA2204:Literals should be spelled correctly", MessageId = "TDataPointTypeEnum")]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
+        [SuppressMessage("Microsoft.Naming", "CA2204:Literals should be spelled correctly", MessageId = "TDataPointTypeEnum")]
+        [SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
         static DataCollectionOrchestrator()
         {
             if (!typeof(TDataPointTypeEnum).IsEnum)
@@ -47,18 +48,18 @@ namespace DAaVE.Library.DataCollection
         /// If a data collector class is encountered that is already being polled, the existing instance 
         /// will be shutdown.
         /// </summary>
-        public void StartCollectors(Assembly assembly, IDataPointFireHose<TDataPointTypeEnum> dataPointFireHose, IErrorSink errorSink)
+        [SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
+        public void StartCollectors(
+            Assembly assembly, 
+            IDataPointFireHose<TDataPointTypeEnum> dataPointFireHose, 
+            IErrorSink errorSink)
         {
             if (assembly == null)
             {
                 throw new ArgumentNullException("assembly");
             }
 
-            IEnumerable<IDataCollector<TDataPointTypeEnum>> dataCollectors = assembly.GetTypes()
-                .Where(t => t.CustomAttributes.Any(a => a.AttributeType.Equals(typeof(DataCollectorAttribute))))
-                .Select(t => Activator.CreateInstance(t))
-                .Select(o => o as IDataCollector<TDataPointTypeEnum>)
-                .Where(c => c != null);
+            IEnumerable<IDataCollector<TDataPointTypeEnum>> dataCollectors = InstantiateCollectors(assembly);
 
             lock (this.pollerThreads)
             {
@@ -84,7 +85,7 @@ namespace DAaVE.Library.DataCollection
                     var newPollerThread = new DataCollectorPollerThread<TDataPointTypeEnum>(
                         taskFactory,
                         newDataCollector,
-                        resultProcessor: results => dataPointFireHose.ProcessRawData(results),
+                        resultProcessor: results => dataPointFireHose.StoreRawData(results),
                         pollEvery: dataCollectorAttribute.PollInterval,
                         pollResultsMustBeProducedWithin: DataCollectionOrchestrator.MaximumPollDuration,
                         errorSink: errorSink);
@@ -92,6 +93,15 @@ namespace DAaVE.Library.DataCollection
                     this.pollerThreads.Add(dataCollectorType, newPollerThread);
                 }
             }
+        }
+
+        private static IEnumerable<IDataCollector<TDataPointTypeEnum>> InstantiateCollectors(Assembly assembly)
+        {
+            return assembly.GetTypes()
+                .Where(t => t.CustomAttributes.Any(a => a.AttributeType.Equals(typeof(DataCollectorAttribute))))
+                .Select(t => Activator.CreateInstance(t))
+                .Select(o => o as IDataCollector<TDataPointTypeEnum>)
+                .Where(c => c != null);
         }
 
         /// <summary>
