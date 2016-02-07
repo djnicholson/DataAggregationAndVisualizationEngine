@@ -2,6 +2,8 @@
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1649:FileHeaderFileNameDocumentationMustMatchTypeName", Justification = "Can't have it both ways, StyleCop!")]
+
 namespace DAaVE.Library.DataCollection
 {
     using System;
