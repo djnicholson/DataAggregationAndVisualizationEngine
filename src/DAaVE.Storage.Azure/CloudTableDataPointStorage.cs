@@ -123,10 +123,10 @@ namespace DAaVE.Storage.Azure
             }
 
             IDictionary<string, DataPoint[]> nextPage = null;
-            if (!rawDataPageBuffers.TryGetValue(type, out nextPage) || (nextPage.Count == 0))
+            if (!this.rawDataPageBuffers.TryGetValue(type, out nextPage) || (nextPage.Count == 0))
             {
-                RebuildRawDataPageBuffersForType(type);
-                if (!rawDataPageBuffers.TryGetValue(type, out nextPage) || (nextPage.Count == 0))
+                this.RebuildRawDataPageBuffersForType(type);
+                if (!this.rawDataPageBuffers.TryGetValue(type, out nextPage) || (nextPage.Count == 0))
                 {
                     continuationToken = null;
                     return new DataPoint[0];

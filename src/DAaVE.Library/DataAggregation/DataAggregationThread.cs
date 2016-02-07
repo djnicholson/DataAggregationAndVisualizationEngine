@@ -90,7 +90,7 @@ namespace DAaVE.Library.DataAggregation
         /// </summary>
         public void Dispose()
         {
-            shutdownStart.Set();
+            this.shutdownStart.Set();
         }
     }
 }

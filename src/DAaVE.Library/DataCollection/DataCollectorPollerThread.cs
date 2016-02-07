@@ -64,7 +64,7 @@ namespace DAaVE.Library.DataCollection
 
                 try
                 {
-                    dataCollector.OnPollingComplete();
+                    this.dataCollector.OnPollingComplete();
                 }
                 catch (Exception e)
                 {
@@ -77,13 +77,13 @@ namespace DAaVE.Library.DataCollection
             }
             else
             {
-                this.taskFactory.StartNew(IndividualPoll);
+                this.taskFactory.StartNew(this.IndividualPoll);
             }
         }
 
         private void IndividualPoll()
         {
-            Task<IDictionary<DataPointType, DataPoint>> newDataPointsTask = TryInvokePoll();
+            Task<IDictionary<DataPointType, DataPoint>> newDataPointsTask = this.TryInvokePoll();
 
             bool succeededWithinTimeLimit = newDataPointsTask.Wait(this.pollResultsMustBeProducedWithin);
 
