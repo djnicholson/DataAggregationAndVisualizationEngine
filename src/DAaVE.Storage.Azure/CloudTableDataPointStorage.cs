@@ -55,6 +55,13 @@ namespace DAaVE.Storage.Azure
                 RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(1.0), int.MaxValue),
             };
 
+        private readonly ConcurrentDictionary<TDataPointTypeEnum, IDictionary<string, DataPoint[]>> rawDataPageBuffers =
+            new ConcurrentDictionary<TDataPointTypeEnum, IDictionary<string, DataPoint[]>>();
+
+        private readonly CloudTable firehoseTable;
+
+        private readonly CloudTable aggregationTable;
+
         /// <summary>
         /// 
         /// </summary>
@@ -223,12 +230,5 @@ namespace DAaVE.Storage.Azure
                 }
             }
         }
-
-        private readonly ConcurrentDictionary<TDataPointTypeEnum, IDictionary<string, DataPoint[]>> rawDataPageBuffers =
-            new ConcurrentDictionary<TDataPointTypeEnum, IDictionary<string, DataPoint[]>>();
-
-        private readonly CloudTable firehoseTable;
-
-        private readonly CloudTable aggregationTable;
     }
 }

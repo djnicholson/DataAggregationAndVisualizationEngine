@@ -13,6 +13,8 @@ namespace DAaVE.Storage.Azure
     internal sealed class DataPointCloudTableEntity<TDataPointTypeEnum> : TableEntity
         where TDataPointTypeEnum : struct, IComparable, IFormattable
     {
+        public const int MinutesOfRawDataPerFireHosePage = 5;
+
         private const int RuntimeVersion = 1;
 
         public DataPointCloudTableEntity()
@@ -32,7 +34,15 @@ namespace DAaVE.Storage.Azure
             this.PartitionKey = GeneratePartitionKey(this.Type, this.CollectionTimeUtc);
         }
 
-        public const int MinutesOfRawDataPerFireHosePage = 5;
+        public string Collector { get; set; }
+
+        public TDataPointTypeEnum Type { get; set; }
+
+        public DateTime CollectionTimeUtc { get; set; }
+
+        public int PersistedVersion { get; set; }
+
+        public double Value { get; set; }
 
         public static string GeneratePartitionKey(TDataPointTypeEnum type, DateTime utcTimestamp)
         {
@@ -60,15 +70,5 @@ namespace DAaVE.Storage.Azure
                 current = current.AddMinutes(MinutesOfRawDataPerFireHosePage);
             }
         }
-
-        public string Collector { get; set; }
-
-        public TDataPointTypeEnum Type { get; set; }
-
-        public DateTime CollectionTimeUtc { get; set; }
-
-        public int PersistedVersion { get; set; }
-
-        public double Value { get; set; }
     }
 }

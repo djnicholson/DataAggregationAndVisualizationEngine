@@ -15,6 +15,8 @@ namespace DAaVE.Library.DataAggregation
     internal sealed class DataAggregationThread<TDataPointType> : IDisposable
         where TDataPointType : struct, IComparable, IFormattable
     {
+        private ManualResetEventSlim shutdownStart = new ManualResetEventSlim(false);
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA2204:Literals should be spelled correctly", MessageId = "TDataPointTypeEnum")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
         static DataAggregationThread()
@@ -24,8 +26,6 @@ namespace DAaVE.Library.DataAggregation
                 throw new NotSupportedException("TDataPointTypeEnum parameter must be an enum");
             }
         }
-
-        private ManualResetEventSlim shutdownStart = new ManualResetEventSlim(false);
 
         internal DataAggregationThread(
             TDataPointType type,

@@ -35,6 +35,11 @@ namespace DAaVE.Library.DataCollection
     public sealed class DataCollectionOrchestrator<TDataPointTypeEnum> : IDisposable
         where TDataPointTypeEnum : struct, IComparable, IFormattable
     {
+        private IDictionary<Type, DataCollectorPollerThread<TDataPointTypeEnum>> pollerThreads =
+            new Dictionary<Type, DataCollectorPollerThread<TDataPointTypeEnum>>();
+
+        private volatile bool shuttingDown = false;
+
         [SuppressMessage("Microsoft.Naming", "CA2204:Literals should be spelled correctly", MessageId = "TDataPointTypeEnum")]
         [SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
         static DataCollectionOrchestrator()
@@ -99,15 +104,6 @@ namespace DAaVE.Library.DataCollection
             }
         }
 
-        private static IEnumerable<IDataCollector<TDataPointTypeEnum>> InstantiateCollectors(Assembly assembly)
-        {
-            return assembly.GetTypes()
-                .Where(t => t.CustomAttributes.Any(a => a.AttributeType.Equals(typeof(DataCollectorAttribute))))
-                .Select(t => Activator.CreateInstance(t))
-                .Select(o => o as IDataCollector<TDataPointTypeEnum>)
-                .Where(c => c != null);
-        }
-
         /// <summary>
         /// Shuts down all collectors
         /// </summary>
@@ -124,9 +120,13 @@ namespace DAaVE.Library.DataCollection
             }
         }
 
-        private IDictionary<Type, DataCollectorPollerThread<TDataPointTypeEnum>> pollerThreads =
-            new Dictionary<Type, DataCollectorPollerThread<TDataPointTypeEnum>>();
-
-        private volatile bool shuttingDown = false;
+        private static IEnumerable<IDataCollector<TDataPointTypeEnum>> InstantiateCollectors(Assembly assembly)
+        {
+            return assembly.GetTypes()
+                .Where(t => t.CustomAttributes.Any(a => a.AttributeType.Equals(typeof(DataCollectorAttribute))))
+                .Select(t => Activator.CreateInstance(t))
+                .Select(o => o as IDataCollector<TDataPointTypeEnum>)
+                .Where(c => c != null);
+        }
     }
 }

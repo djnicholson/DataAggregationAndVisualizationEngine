@@ -13,6 +13,8 @@ namespace DAaVE.Storage.Azure
     internal class AggregatedDataPointCloudTableEntity<TDataPointTypeEnum> : TableEntity
         where TDataPointTypeEnum : struct, IComparable, IFormattable
     {
+        public const int MinutesOfAggregatedDataPerPage = 60 * 6;
+
         private const int RuntimeVersion = 2;
 
         public AggregatedDataPointCloudTableEntity()
@@ -32,8 +34,6 @@ namespace DAaVE.Storage.Azure
 
             this.PartitionKey = GetPartition(key, this.TimestampUtc);
         }
-
-        public const int MinutesOfAggregatedDataPerPage = 60 * 6;
 
         public string Aggregator { get; set; }
 

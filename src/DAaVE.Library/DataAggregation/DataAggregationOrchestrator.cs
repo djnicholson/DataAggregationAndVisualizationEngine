@@ -34,6 +34,9 @@ namespace DAaVE.Library.DataAggregation
     public sealed class DataAggregationOrchestrator<TDataPointTypeEnum> : IDisposable
            where TDataPointTypeEnum : struct, IComparable, IFormattable
     {
+        private IDictionary<TDataPointTypeEnum, DataAggregationThread<TDataPointTypeEnum>> aggregationThreads =
+            new Dictionary<TDataPointTypeEnum, DataAggregationThread<TDataPointTypeEnum>>();
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA2204:Literals should be spelled correctly", MessageId = "TDataPointTypeEnum")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
         static DataAggregationOrchestrator()
@@ -74,8 +77,5 @@ namespace DAaVE.Library.DataAggregation
                 thread.Dispose();
             }
         }
-
-        private IDictionary<TDataPointTypeEnum, DataAggregationThread<TDataPointTypeEnum>> aggregationThreads = 
-            new Dictionary<TDataPointTypeEnum, DataAggregationThread<TDataPointTypeEnum>>();
     }
 }

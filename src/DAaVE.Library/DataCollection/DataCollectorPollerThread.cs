@@ -15,6 +15,15 @@ namespace DAaVE.Library.DataCollection
     internal sealed class DataCollectorPollerThread<DataPointType> : IDisposable
             where DataPointType : struct, IComparable, IFormattable
     {
+        private readonly TaskFactory taskFactory;
+        private readonly IDataCollector<DataPointType> dataCollector;
+        private readonly Action<IDictionary<DataPointType, DataPoint>> resultProcessor;
+        private readonly TimeSpan pollResultsMustBeProducedWithin;
+        private readonly IErrorSink errorSink;
+        private readonly CancellationTokenSource pollLoopCancellationTokenSource;
+        private readonly Timer pollingLoop;
+        private readonly ManualResetEventSlim pollingLoopTerminated;
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA2204:Literals should be spelled correctly", MessageId = "TDataPointTypeEnum")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
         static DataCollectorPollerThread()
@@ -24,15 +33,6 @@ namespace DAaVE.Library.DataCollection
                 throw new NotSupportedException("TDataPointTypeEnum parameter must be an enum");
             }
         }
-
-        private readonly TaskFactory taskFactory;
-        private readonly IDataCollector<DataPointType> dataCollector;
-        private readonly Action<IDictionary<DataPointType, DataPoint>> resultProcessor;
-        private readonly TimeSpan pollResultsMustBeProducedWithin;
-        private readonly IErrorSink errorSink;
-        private readonly CancellationTokenSource pollLoopCancellationTokenSource;
-        private readonly Timer pollingLoop;
-        private readonly ManualResetEventSlim pollingLoopTerminated;
 
         public DataCollectorPollerThread(
             TaskFactory taskFactory,
@@ -52,6 +52,15 @@ namespace DAaVE.Library.DataCollection
 
             this.pollingLoop = new Timer(this.PollLoop, state: null, dueTime: -1, period: -1);
             this.pollingLoop.Change(dueTime: TimeSpan.FromTicks(0L), period: pollEvery);
+        }
+
+        /// <summary>
+        /// Trigger a shutdown after any currently active polls return.
+        /// </summary>
+        public void Dispose()
+        {
+            this.pollLoopCancellationTokenSource.Cancel();
+            this.pollingLoopTerminated.Wait();
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA2204:Literals should be spelled correctly", MessageId = "OnPollingComplete")]
@@ -115,15 +124,6 @@ namespace DAaVE.Library.DataCollection
                 this.errorSink.OnError("Exception when polling " + this.dataCollector + ": " + e.Message, e);
                 return null;
             }
-        }
-
-        /// <summary>
-        /// Trigger a shutdown after any currently active polls return.
-        /// </summary>
-        public void Dispose()
-        {
-            this.pollLoopCancellationTokenSource.Cancel();
-            this.pollingLoopTerminated.Wait();
         }
     }
 }

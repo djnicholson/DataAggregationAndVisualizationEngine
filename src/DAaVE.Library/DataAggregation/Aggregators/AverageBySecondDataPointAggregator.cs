@@ -14,11 +14,6 @@ namespace DAaVE.Library.DataAggregation.Aggregators
     /// </summary>
     public sealed class AverageBySecondDataPointAggregator : IDataPointAggregator
     {
-        private static DateTime TruncateToSecondsUtc(DateTime input)
-        {
-            return new DateTime(input.Year, input.Month, input.Day, input.Hour, input.Minute, input.Second, DateTimeKind.Utc);
-        }
-
         /// <inheritdoc />
         public IEnumerable<AggregatedDataPoint> Aggregate(IEnumerable<DataPoint> continuousDataSegment)
         {
@@ -42,6 +37,11 @@ namespace DAaVE.Library.DataAggregation.Aggregators
             }
 
             yield break;
+        }
+
+        private static DateTime TruncateToSecondsUtc(DateTime input)
+        {
+            return new DateTime(input.Year, input.Month, input.Day, input.Hour, input.Minute, input.Second, DateTimeKind.Utc);
         }
     }
 }
