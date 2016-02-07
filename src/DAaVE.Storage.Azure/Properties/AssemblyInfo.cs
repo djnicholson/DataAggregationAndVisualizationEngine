@@ -1,4 +1,8 @@
-﻿using System;
+﻿// <copyright file="AssemblyInfo.cs" company="David Nicholson">
+//     Copyright (c) David Nicholson. All rights reserved.
+// </copyright>
+
+using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 

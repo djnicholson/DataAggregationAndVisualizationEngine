@@ -21,18 +21,30 @@ namespace DAaVE.Library.DataCollection
     public sealed class DataCollectionOrchestrator<TDataPointTypeEnum> : IDisposable
         where TDataPointTypeEnum : struct, IComparable, IFormattable
     {
+        /// <summary>
+        /// All threads polling data collectors.
+        /// </summary>
         private IDictionary<Type, DataCollectorPollerThread<TDataPointTypeEnum>> pollerThreads =
             new Dictionary<Type, DataCollectorPollerThread<TDataPointTypeEnum>>();
 
+        /// <summary>
+        /// Whether a shut down is currently in progress. Can immediately be considered valid in any thread that has
+        /// a lock on <see cref="pollerThreads"/>.
+        /// </summary>
         private volatile bool shuttingDown = false;
 
         /// <summary>
         /// Instantiates an instance of any classes in the provided assembly that are annotated with the
         /// <see cref="DataCollectorAttribute"/> attribute using default constructors (that must exist).
-        /// These newly instantiated data collectors will immeadietely being being polled for data.
+        /// These newly instantiated data collectors will immediately begin being polled for data.
         /// If a data collector class is encountered that is already being polled, the existing instance 
         /// will be shutdown.
         /// </summary>
+        /// <param name="assembly">
+        /// The assembly to discover <see cref="IDataCollector{TDataPointTypeEnum}"/> implementations within.
+        /// </param>
+        /// <param name="dataPointFireHose">Data points will be submitted here.</param>
+        /// <param name="errorSink">Exceptional circumstances will be reported here.</param>
         public void StartCollectors(
             Assembly assembly, 
             IDataPointFireHose<TDataPointTypeEnum> dataPointFireHose, 
@@ -95,6 +107,14 @@ namespace DAaVE.Library.DataCollection
             }
         }
 
+        /// <summary>
+        /// Instantiates an instance of any classes in the provided assembly that are annotated with the
+        /// <see cref="DataCollectorAttribute"/> attribute using default constructors (that must exist).
+        /// </summary>
+        /// <param name="assembly">
+        /// The assembly to discover <see cref="IDataCollector{TDataPointTypeEnum}"/> implementations within.
+        /// </param>
+        /// <returns>The instantiated objects.</returns>
         private static IEnumerable<IDataCollector<TDataPointTypeEnum>> InstantiateCollectors(Assembly assembly)
         {
             return assembly.GetTypes()

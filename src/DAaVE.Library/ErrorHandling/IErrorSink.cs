@@ -12,7 +12,7 @@ namespace DAaVE.Library.ErrorHandling
     public interface IErrorSink
     {
         /// <summary>
-        /// Invoked when an exception has occured that indicates an error.
+        /// Invoked when an exception has occurred that indicates an error.
         /// </summary>
         /// <param name="message">A description of the condition.</param>
         /// <param name="exception">The exception that was thrown.</param>

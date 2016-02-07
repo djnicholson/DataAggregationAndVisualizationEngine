@@ -41,6 +41,7 @@ namespace DAaVE.Library.Storage
         /// The continuation token that was returned from <see cref="ReadPageOfRawData"/> when the raw
         /// data was received.
         /// </param>
+        /// /// <returns>The task where the storage implementation was/is being invoked.</returns>
         Task StoreAggregatedData(
             TDataPointTypeEnum type,
             IEnumerable<AggregatedDataPoint> aggregatedDataPoints,

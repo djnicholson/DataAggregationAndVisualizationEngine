@@ -12,17 +12,39 @@ namespace DAaVE.Storage.Azure
 
     using Microsoft.WindowsAzure.Storage.Table;
 
+    /// <summary>
+    /// Represents a row of data in Azure Table Storage that contains information about the
+    /// exact value of some data point type at some time as observed by a single data collector.
+    /// </summary>
+    /// <typeparam name="TDataPointTypeEnum">Possible types of data.</typeparam>
     internal sealed class DataPointCloudTableEntity<TDataPointTypeEnum> : TableEntity
         where TDataPointTypeEnum : struct, IComparable, IFormattable
     {
+        /// <summary>
+        /// The amount of minutes worth of raw data in each partition of the Azure Table. Aggregations
+        /// cannot be performed on any window wider than this.
+        /// TODO: Allow customization by collector/aggregator implementers.
+        /// </summary>
         public const int MinutesOfRawDataPerFireHosePage = 5;
 
+        /// <summary>
+        /// The schema version currently in use (increment whenever making changes to the public surface area of this class).
+        /// </summary>
         private const int RuntimeVersion = 1;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DataPointCloudTableEntity{TDataPointTypeEnum}"/> class.
+        /// For use in deserialization only, not to be called explicitly.
+        /// </summary>
         public DataPointCloudTableEntity()
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DataPointCloudTableEntity{TDataPointTypeEnum}"/> class.
+        /// </summary>
+        /// <param name="key">The type of data point being collected.</param>
+        /// <param name="value">The current value of the data point type.</param>
         public DataPointCloudTableEntity(TDataPointTypeEnum key, DataPoint value)
         {
             this.PersistedVersion = RuntimeVersion;
@@ -36,17 +58,61 @@ namespace DAaVE.Storage.Azure
             this.PartitionKey = GeneratePartitionKey(this.Type, this.CollectionTimeUtc);
         }
 
+        /// <summary>
+        /// Gets or sets the name of the machine that observed this data value.
+        /// Setter is for use in deserialization only and not to be called explicitly.
+        /// </summary>
         public string Collector { get; set; }
 
+        /// <summary>
+        /// Gets or sets the type of data point observed.
+        /// Setter is for use in deserialization only and not to be called explicitly.
+        /// </summary>
         public TDataPointTypeEnum Type { get; set; }
 
+        /// <summary>
+        /// Gets or sets the time at which this value was observed.
+        /// Setter is for use in deserialization only and not to be called explicitly.
+        /// </summary>
         public DateTime CollectionTimeUtc { get; set; }
 
+        /// <summary>
+        /// Gets or sets the schema version in use at the time the value was stored.
+        /// Setter is for use in deserialization only and not to be called explicitly.
+        /// </summary>
         public int PersistedVersion { get; set; }
 
+        /// <summary>
+        /// Gets or sets the value observed.
+        /// Setter is for use in deserialization only and not to be called explicitly.
+        /// </summary>
         public double Value { get; set; }
 
-        public static string GeneratePartitionKey(TDataPointTypeEnum type, DateTime utcTimestamp)
+        /// <summary>
+        /// Produces an enumeration of all partition keys that were in use within a time window.
+        /// </summary>
+        /// <param name="type">The type of data point.</param>
+        /// <param name="startUtc">Start of the time window (in UTC).</param>
+        /// <param name="endUtc">End of the time window (in UTC).</param>
+        /// <returns>An enumeration of partition keys.</returns>
+        public static IEnumerable<string> GetPartitions(TDataPointTypeEnum type, DateTime startUtc, DateTime endUtc)
+        {
+            DateTime current = new DateTime(startUtc.Year, startUtc.Month, startUtc.Day, startUtc.Hour, startUtc.Minute, second: 0);
+            while (current < endUtc)
+            {
+                yield return GeneratePartitionKey(type, current);
+                current = current.AddMinutes(MinutesOfRawDataPerFireHosePage);
+            }
+        }
+
+        /// <summary>
+        /// Determines the partition key that is used for recording the value of a specific data point type
+        /// at a specific time.
+        /// </summary>
+        /// <param name="type">The type of data point.</param>
+        /// <param name="utcTimestamp">The time at which the data point was observed.</param>
+        /// <returns>A partition key.</returns>
+        private static string GeneratePartitionKey(TDataPointTypeEnum type, DateTime utcTimestamp)
         {
             // When providing "pages" of data to aggregators, we return 'MinutesOfRawDataPerFireHosePage' 
             // minutes of data at a time. Each page shares a partition in storage for efficient retrieval
@@ -61,16 +127,6 @@ namespace DAaVE.Storage.Azure
                 utcTimestamp.Hour,
                 utcTimestamp.Minute / MinutesOfRawDataPerFireHosePage,
                 RuntimeVersion);
-        }
-
-        public static IEnumerable<string> GetPartitions(TDataPointTypeEnum type, DateTime start, DateTime end)
-        {
-            DateTime current = new DateTime(start.Year, start.Month, start.Day, start.Hour, start.Minute, second: 0);
-            while (current < end)
-            {
-                yield return GeneratePartitionKey(type, current);
-                current = current.AddMinutes(MinutesOfRawDataPerFireHosePage);
-            }
         }
     }
 }

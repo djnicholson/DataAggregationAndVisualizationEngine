@@ -13,9 +13,9 @@ namespace DAaVE.Library.DataCollection
     {
         /// <summary>
         /// Collectors are only given a short amount of time to successfully return a result when being
-        /// polled. This facilitates easy creation of naive pollers that make a synchronous blocking
-        /// network request); more advanced pollers will typically return synchronously and do actual
-        /// processing in their own background thread.
+        /// polled. This facilitates easy creation of naive <see cref="IDataCollector{TDataPointTypeEnum}"/>
+        /// implementations that make a synchronous blocking network request); more advanced implementations
+        /// will typically return synchronously and do actual processing in their own background thread.
         /// </summary>
         public static readonly TimeSpan MaximumPollDuration = TimeSpan.FromSeconds(30.0);
     }

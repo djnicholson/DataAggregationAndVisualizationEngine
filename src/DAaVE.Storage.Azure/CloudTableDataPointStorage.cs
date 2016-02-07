@@ -20,34 +20,63 @@ namespace DAaVE.Storage.Azure
     using Microsoft.WindowsAzure.Storage.Table;
 
     /// <summary>
-    /// 
+    /// Performs all operations required for storing and reading both raw and aggregated data points
+    /// using Azure Table Storage.
     /// </summary>
-    /// <typeparam name="TDataPointTypeEnum"></typeparam>
+    /// <typeparam name="TDataPointTypeEnum">
+    /// An enumeration of all possible data point types. Values must not change or be reassigned after
+    /// use and should not be removed.
+    /// </typeparam>
     public sealed class CloudTableDataPointStorage<TDataPointTypeEnum> 
         : IDataPointFireHose<TDataPointTypeEnum>, IDataPointPager<TDataPointTypeEnum>
         where TDataPointTypeEnum : struct, IComparable, IFormattable
     {
-        private static readonly TableRequestOptions LongDrawnOutRetry =
+        /// <summary>
+        /// Retries (at an exponentially decaying rate) for as long as the raw data being stored may still
+        /// be eligible for aggregation.
+        /// </summary>
+        private static readonly TableRequestOptions RawDataStorageLongDrawnOutRetry =
             new TableRequestOptions()
             {
                 MaximumExecutionTime = CloudTableDataPointStorage.MaximumFireHoseRecentDataPointAge,
                 RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(1.0), int.MaxValue),
             };
 
+        /// <summary>
+        /// Retries (at an exponentially decaying rate) for as long as the raw data being stored may still
+        /// be eligible for inclusion in the current or previous aggregation partition.
+        /// </summary>
+        private static readonly TableRequestOptions AggregatedDataStorageLongDrawnOutRetry =
+            new TableRequestOptions()
+            {
+                MaximumExecutionTime = 
+                    TimeSpan.FromMinutes(AggregatedDataPointCloudTableEntity<TDataPointTypeEnum>.MinutesOfAggregatedDataPerPage),
+                RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(1.0), int.MaxValue),
+            };
+
+        /// <summary>
+        /// Data retrieved from storage but that could be issued to clients upon request.
+        /// </summary>
         private readonly ConcurrentDictionary<TDataPointTypeEnum, IDictionary<string, DataPoint[]>> rawDataPageBuffers =
             new ConcurrentDictionary<TDataPointTypeEnum, IDictionary<string, DataPoint[]>>();
 
+        /// <summary>
+        /// The table where raw data points are stored.
+        /// </summary>
         private readonly CloudTable firehoseTable;
 
+        /// <summary>
+        /// The table where aggregated data points are stored.
+        /// </summary>
         private readonly CloudTable aggregationTable;
 
         /// <summary>
-        /// 
+        /// Initializes a new instance of the <see cref="CloudTableDataPointStorage{TDataPointTypeEnum}"/> class.
         /// </summary>
-        /// <param name="fireHoseTableUri"></param>
-        /// /// <param name="aggregationTableUri"></param>
-        /// <param name="storageAccount"></param>
-        /// <param name="storageKey"></param>
+        /// <param name="fireHoseTableUri">URL to the Azure Table Storage table used to persist raw collected data.</param>
+        /// <param name="aggregationTableUri">URL to the Azure Table Storage table used to persist aggregated data.</param>
+        /// <param name="storageAccount">The name of the Azure Storage account.</param>
+        /// <param name="storageKey">The key for the Azure Storage account.</param>
         public CloudTableDataPointStorage(Uri fireHoseTableUri, Uri aggregationTableUri, string storageAccount, string storageKey)
         {
             StorageCredentials credentials = new StorageCredentials(storageAccount, storageKey);
@@ -66,6 +95,7 @@ namespace DAaVE.Storage.Azure
         /// <see cref="System.Threading.ThreadPool"/>.
         /// </summary>
         /// <param name="rawDataSample">Data points produced by a collector. These may not be recent.</param>
+        /// <returns>The task within which the storage is taking place.</returns>
         public Task StoreRawData(IDictionary<TDataPointTypeEnum, DataPoint> rawDataSample)
         {
             DateTime postMarkedOnUtc = DateTime.UtcNow;
@@ -82,19 +112,14 @@ namespace DAaVE.Storage.Azure
                 if (batch.Value.Any())
                 {
                     allTasks.Add(
-                        this.firehoseTable.ExecuteBatchAsync(batch.Value, requestOptions: LongDrawnOutRetry, operationContext: new OperationContext()));
+                        this.firehoseTable.ExecuteBatchAsync(batch.Value, requestOptions: RawDataStorageLongDrawnOutRetry, operationContext: new OperationContext()));
                 }
             }
 
             return Task.WhenAll(allTasks);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="continuationToken"></param>
-        /// <returns></returns>
+        /// <inheritdoc/>
         public IEnumerable<DataPoint> ReadPageOfRawData(TDataPointTypeEnum type, ref object continuationToken)
         {
             this.rawDataPageBuffers.AddOrUpdate(
@@ -125,12 +150,7 @@ namespace DAaVE.Storage.Azure
             return nextPage[nextPartition];
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="aggregatedDataPoints"></param>
-        /// <param name="continuationToken"></param>
+        /// <inheritdoc/>
         public Task StoreAggregatedData(
             TDataPointTypeEnum type,
             IEnumerable<AggregatedDataPoint> aggregatedDataPoints,
@@ -154,13 +174,18 @@ namespace DAaVE.Storage.Azure
                 if (batch.Any())
                 {
                     allTasks.Add(
-                        this.aggregationTable.ExecuteBatchAsync(batch, requestOptions: LongDrawnOutRetry, operationContext: new OperationContext()));
+                        this.aggregationTable.ExecuteBatchAsync(batch, requestOptions: AggregatedDataStorageLongDrawnOutRetry, operationContext: new OperationContext()));
                 }
             }
 
             return Task.WhenAll(allTasks);
         }
 
+        /// <summary>
+        /// Splits data based on partition key and creates a batch insert operation for each partition.
+        /// </summary>
+        /// <param name="recentDataPoints">The data to be inserted.</param>
+        /// <returns>A set of operations to perform.</returns>
         private static IDictionary<string, TableBatchOperation> CreateInsertOperations(
             IEnumerable<DataPointCloudTableEntity<TDataPointTypeEnum>> recentDataPoints)
         {
@@ -178,11 +203,20 @@ namespace DAaVE.Storage.Azure
             return batches;
         }
 
+        /// <summary>
+        /// Converts context stored by user back into a string.
+        /// </summary>
+        /// <param name="pagerContext">Context from user.</param>
+        /// <returns>Context as a string (containing a partition key).</returns>
         private static string GetPartitionKey(object pagerContext)
         {
             return pagerContext as string;
         }
 
+        /// <summary>
+        /// Queries for raw data currently eligible for aggregation.
+        /// </summary>
+        /// <param name="type">The type of data point to query.</param>
         private void RebuildRawDataPageBuffersForType(TDataPointTypeEnum type)
         {
             DateTime utcNow = DateTime.UtcNow;

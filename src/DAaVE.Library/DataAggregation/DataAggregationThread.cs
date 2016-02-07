@@ -13,11 +13,25 @@ namespace DAaVE.Library.DataAggregation
     using DAaVE.Library.ErrorHandling;
     using DAaVE.Library.Storage;
 
+    /// <summary>
+    /// Continually performs aggregation for a specific type of data points.
+    /// </summary>
+    /// <typeparam name="TDataPointType">The type of data point being aggregated.</typeparam>
     internal sealed class DataAggregationThread<TDataPointType> : IDisposable
         where TDataPointType : struct, IComparable, IFormattable
     {
+        /// <summary>
+        /// Indicates that aggregation should now cease.
+        /// </summary>
         private ManualResetEventSlim shutdownStart = new ManualResetEventSlim(false);
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DataAggregationThread{TDataPointType}"/> class.
+        /// </summary>
+        /// <param name="type">The type of data point to aggregate in the this thread.</param>
+        /// <param name="aggregator">The implementation of a specific aggregation technique.</param>
+        /// <param name="pager">Provides access to raw data points.</param>
+        /// <param name="errorSink">Exceptional circumstances during aggregation will be reported here.</param>
         internal DataAggregationThread(
             TDataPointType type,
             IDataPointAggregator aggregator,

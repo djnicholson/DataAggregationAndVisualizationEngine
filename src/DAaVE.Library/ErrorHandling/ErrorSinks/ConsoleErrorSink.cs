@@ -11,10 +11,13 @@ namespace DAaVE.Library.ErrorHandling.ErrorSinks
     /// </summary>
     public sealed class ConsoleErrorSink : IErrorSink
     {
-        private string prefix;
+        /// <summary>
+        /// All messages will be prefixed with this string.
+        /// </summary>
+        private readonly string prefix;
 
         /// <summary>
-        /// Constructs a new instance of the ConsoleErrorSink class.
+        /// Initializes a new instance of the <see cref="ConsoleErrorSink"/> class.
         /// </summary>
         /// <param name="prefix">The prefix to write to the console before any errors.</param>
         public ConsoleErrorSink(string prefix)

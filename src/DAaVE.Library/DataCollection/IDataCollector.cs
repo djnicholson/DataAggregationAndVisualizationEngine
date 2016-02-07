@@ -29,8 +29,8 @@ namespace DAaVE.Library.DataCollection
         Task<IDictionary<TDataPointTypeEnum, DataPoint>> Poll();
 
         /// <summary>
-        /// After this method is invoked by the poller, instances will not be subject to any further 
-        /// invocations of their <see cref="Poll"/> method.
+        /// After this method is invoked, instances will not be subject to any further invocations of their
+        /// <see cref="Poll"/> method.
         /// </summary>
         void OnPollingComplete();
     }

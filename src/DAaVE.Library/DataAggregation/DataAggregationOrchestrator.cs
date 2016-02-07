@@ -19,12 +19,20 @@ namespace DAaVE.Library.DataAggregation
     public sealed class DataAggregationOrchestrator<TDataPointTypeEnum> : IDisposable
            where TDataPointTypeEnum : struct, IComparable, IFormattable
     {
+        /// <summary>
+        /// All aggregation threads being orchestrated.
+        /// </summary>
         private IDictionary<TDataPointTypeEnum, DataAggregationThread<TDataPointTypeEnum>> aggregationThreads =
             new Dictionary<TDataPointTypeEnum, DataAggregationThread<TDataPointTypeEnum>>();
 
         /// <summary>
-        /// Creates a new instance of the DataAggregationOrchestrator class.
+        /// Initializes a new instance of the <see cref="DataAggregationOrchestrator{TDataPointTypeEnum}"/> class.
         /// </summary>
+        /// <param name="aggregator">An instance of some concrete aggregation implementation.</param>
+        /// <param name="pager">Provides access to raw data points.</param>
+        /// <param name="errorSink">
+        /// Will receive reports of all exceptional circumstances encountered during aggregation.
+        /// </param>
         public DataAggregationOrchestrator(
             IDataPointAggregator aggregator,
             IDataPointPager<TDataPointTypeEnum> pager,

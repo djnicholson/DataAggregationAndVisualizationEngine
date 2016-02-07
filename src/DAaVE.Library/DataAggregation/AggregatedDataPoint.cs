@@ -13,12 +13,12 @@ namespace DAaVE.Library.DataAggregation
     public sealed class AggregatedDataPoint
     {
         /// <summary>
-        /// The time being represented (in UTC).
+        /// Gets or sets the time being represented (in UTC).
         /// </summary>
         public DateTime UtcTimestamp { get; set; }
 
         /// <summary>
-        /// Expected data point value at this time (based on aggregating nearby actual
+        /// Gets or sets expected data point value at this time (based on aggregating nearby actual
         /// data point collections).
         /// </summary>
         public double AggregatedValue { get; set; }

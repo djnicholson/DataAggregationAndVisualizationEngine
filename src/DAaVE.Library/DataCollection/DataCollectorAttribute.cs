@@ -19,7 +19,7 @@ namespace DAaVE.Library.DataCollection
         public static readonly TimeSpan DefaultPollInterval = TimeSpan.FromSeconds(0.5);
 
         /// <summary>
-        /// Creates a new instance of the DataCollectorAttribute class.
+        /// Initializes a new instance of the <see cref="DataCollectorAttribute"/> class.
         /// </summary>
         public DataCollectorAttribute()
         {
@@ -27,12 +27,12 @@ namespace DAaVE.Library.DataCollection
         }
 
         /// <summary>
-        /// The interval at which the collector should be polled.
+        /// Gets or sets the interval at which the collector should be polled.
         /// </summary>
         public TimeSpan PollInterval { get; set; }
 
         /// <summary>
-        /// The interval at which the collector should be polled (in seconds).
+        /// Gets or sets the interval at which the collector should be polled (in seconds).
         /// </summary>
         public double PollIntervalInSeconds
         {
