@@ -4,9 +4,10 @@
 
 namespace DAaVE.Library.Storage
 {
-    using DAaVE.Library.DataAggregation;
     using System;
     using System.Collections.Generic;
+
+    using DAaVE.Library.DataAggregation;
 
     /// <summary>
     /// Exposes a continuous stream of raw collected data points as a sequence of pages.

@@ -4,11 +4,13 @@
 
 namespace DAaVE.Storage.Azure
 {
-    using DAaVE.Library;
-    using Microsoft.WindowsAzure.Storage.Table;
     using System;
     using System.Collections.Generic;
     using System.Globalization;
+
+    using DAaVE.Library;
+
+    using Microsoft.WindowsAzure.Storage.Table;
 
     internal sealed class DataPointCloudTableEntity<TDataPointTypeEnum> : TableEntity
         where TDataPointTypeEnum : struct, IComparable, IFormattable

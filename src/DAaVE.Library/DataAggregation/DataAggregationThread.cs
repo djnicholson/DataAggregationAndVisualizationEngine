@@ -4,13 +4,14 @@
 
 namespace DAaVE.Library.DataAggregation
 {
-    using DAaVE.Library.ErrorHandling;
-    using DAaVE.Library.Storage;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+
+    using DAaVE.Library.ErrorHandling;
+    using DAaVE.Library.Storage;
 
     internal sealed class DataAggregationThread<TDataPointType> : IDisposable
         where TDataPointType : struct, IComparable, IFormattable

@@ -4,11 +4,12 @@
 
 namespace DAaVE.Library.DataAggregation
 {
-    using DAaVE.Library.ErrorHandling;
-    using DAaVE.Library.Storage;
     using System;
     using System.Collections.Generic;
     using System.Linq;
+
+    using DAaVE.Library.ErrorHandling;
+    using DAaVE.Library.Storage;
 
     /// <summary>
     /// Constants used during the orchestration of various aggregators.

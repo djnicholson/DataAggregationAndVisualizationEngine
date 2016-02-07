@@ -4,11 +4,13 @@
 
 namespace DAaVE.Storage.Azure
 {
-    using DAaVE.Library.DataAggregation;
-    using Microsoft.WindowsAzure.Storage.Table;
     using System;
     using System.Collections.Generic;
     using System.Globalization;
+
+    using DAaVE.Library.DataAggregation;
+
+    using Microsoft.WindowsAzure.Storage.Table;
 
     internal class AggregatedDataPointCloudTableEntity<TDataPointTypeEnum> : TableEntity
         where TDataPointTypeEnum : struct, IComparable, IFormattable

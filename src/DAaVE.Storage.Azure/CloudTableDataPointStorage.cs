@@ -2,25 +2,27 @@
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 
-using DAaVE.Library;
-using DAaVE.Library.DataAggregation;
-using DAaVE.Library.Storage;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Auth;
-using Microsoft.WindowsAzure.Storage.RetryPolicies;
-using Microsoft.WindowsAzure.Storage.Table;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 // TODO: Fix these (don't swallow exceptions in background tasks).
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "DAaVE.Storage.Azure.CloudTableDataPointStorage`1+<StoreRawData>d__2.#MoveNext()")]
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "DAaVE.Storage.Azure.CloudTableDataPointStorage`1+<StoreAggregatedData>d__4.#MoveNext()")]
 
 namespace DAaVE.Storage.Azure
 {
+    using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+
+    using DAaVE.Library;
+    using DAaVE.Library.DataAggregation;
+    using DAaVE.Library.Storage;
+
+    using Microsoft.WindowsAzure.Storage;
+    using Microsoft.WindowsAzure.Storage.Auth;
+    using Microsoft.WindowsAzure.Storage.RetryPolicies;
+    using Microsoft.WindowsAzure.Storage.Table;
+
     /// <summary>
     /// Constants used within CloudTableDataPointStorage.
     /// </summary>

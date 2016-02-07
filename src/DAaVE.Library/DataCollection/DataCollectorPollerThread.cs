@@ -2,16 +2,17 @@
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 
-using DAaVE.Library.ErrorHandling;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "DAaVE.Library.DataCollection.DataCollectorPollerThread`1+<TryInvokePoll>d__12.#MoveNext()")]
 
 namespace DAaVE.Library.DataCollection
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading;
+    using System.Threading.Tasks;
+
+    using DAaVE.Library.ErrorHandling;
+
     internal sealed class DataCollectorPollerThread<DataPointType> : IDisposable
             where DataPointType : struct, IComparable, IFormattable
     {

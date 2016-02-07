@@ -4,14 +4,15 @@
 
 namespace DAaVE.Library.DataCollection
 {
-    using DAaVE.Library.ErrorHandling;
-    using DAaVE.Library.Storage;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using System.Threading.Tasks;
+
+    using DAaVE.Library.ErrorHandling;
+    using DAaVE.Library.Storage;
 
     /// <summary>
     /// Constants used during the orchestration of various collectors.
