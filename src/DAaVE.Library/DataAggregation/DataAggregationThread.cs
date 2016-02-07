@@ -24,7 +24,6 @@ namespace DAaVE.Library.DataAggregation
             IDataPointPager<TDataPointType> pager,
             IErrorSink errorSink)
         {
-
             object continuationTokenCurrent = null;
 
             int consecutiveErrorCount = 0;
