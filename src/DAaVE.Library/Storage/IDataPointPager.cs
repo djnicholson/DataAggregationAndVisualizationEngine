@@ -6,9 +6,11 @@ namespace DAaVE.Library.Storage
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
+    using System.Threading.Tasks;
 
     using DAaVE.Library.DataAggregation;
-
+    
     /// <summary>
     /// Exposes a continuous stream of raw collected data points as a sequence of pages.
     /// </summary>
@@ -26,8 +28,8 @@ namespace DAaVE.Library.Storage
         /// token has now been successfully, irrevocably aggregated.
         /// </param>
         /// <returns>A set of raw data points suitable for aggregation</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "1#")]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1007:UseGenericsWhereAppropriate")]
+        [SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", Justification = "TODO: Remove continuation parameter and move to semantics where instances of implementors are stateful")]
+        [SuppressMessage("Microsoft.Design", "CA1007:UseGenericsWhereAppropriate", Justification = "TODO: Clients will be made unaware of the actual state")]
         IEnumerable<DataPoint> ReadPageOfRawData(TDataPointTypeEnum type, ref object continuationToken);
 
         /// <summary>
@@ -39,7 +41,7 @@ namespace DAaVE.Library.Storage
         /// The continuation token that was returned from <see cref="ReadPageOfRawData"/> when the raw
         /// data was received.
         /// </param>
-        void StoreAggregatedData(
+        Task StoreAggregatedData(
             TDataPointTypeEnum type,
             IEnumerable<AggregatedDataPoint> aggregatedDataPoints,
             object continuationToken);

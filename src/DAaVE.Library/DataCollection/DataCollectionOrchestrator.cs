@@ -6,7 +6,6 @@ namespace DAaVE.Library.DataCollection
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Reflection;
     using System.Threading.Tasks;
@@ -27,16 +26,6 @@ namespace DAaVE.Library.DataCollection
 
         private volatile bool shuttingDown = false;
 
-        [SuppressMessage("Microsoft.Naming", "CA2204:Literals should be spelled correctly", MessageId = "TDataPointTypeEnum")]
-        [SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
-        static DataCollectionOrchestrator()
-        {
-            if (!typeof(TDataPointTypeEnum).IsEnum)
-            {
-                throw new NotSupportedException("TDataPointTypeEnum parameter must be an enum");
-            }
-        }
-
         /// <summary>
         /// Instantiates an instance of any classes in the provided assembly that are annotated with the
         /// <see cref="DataCollectorAttribute"/> attribute using default constructors (that must exist).
@@ -44,7 +33,6 @@ namespace DAaVE.Library.DataCollection
         /// If a data collector class is encountered that is already being polled, the existing instance 
         /// will be shutdown.
         /// </summary>
-        [SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
         public void StartCollectors(
             Assembly assembly, 
             IDataPointFireHose<TDataPointTypeEnum> dataPointFireHose, 

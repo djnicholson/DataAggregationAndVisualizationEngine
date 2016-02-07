@@ -2,8 +2,6 @@
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 
-[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "DAaVE.Library.DataCollection.DataCollectorPollerThread`1+<TryInvokePoll>d__12.#MoveNext()")]
-
 namespace DAaVE.Library.DataCollection
 {
     using System;
@@ -24,16 +22,6 @@ namespace DAaVE.Library.DataCollection
         private readonly CancellationTokenSource pollLoopCancellationTokenSource;
         private readonly Timer pollingLoop;
         private readonly ManualResetEventSlim pollingLoopTerminated;
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA2204:Literals should be spelled correctly", MessageId = "TDataPointTypeEnum")]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
-        static DataCollectorPollerThread()
-        {
-            if (!typeof(DataPointType).IsEnum)
-            {
-                throw new NotSupportedException("TDataPointTypeEnum parameter must be an enum");
-            }
-        }
 
         public DataCollectorPollerThread(
             TaskFactory taskFactory,
@@ -64,8 +52,6 @@ namespace DAaVE.Library.DataCollection
             this.pollingLoopTerminated.Wait();
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA2204:Literals should be spelled correctly", MessageId = "OnPollingComplete")]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
         private void PollLoop(object state)
         {
             if (this.pollLoopCancellationTokenSource.IsCancellationRequested)
@@ -78,7 +64,8 @@ namespace DAaVE.Library.DataCollection
                 }
                 catch (Exception e)
                 {
-                    this.errorSink.OnError("Exception when invoking OnPollingComplete on " + this.dataCollector + ": " + e.Message, e);
+                    this.errorSink.OnError("Exception when notifying " + this.dataCollector + " about polling completion: " + e.Message, e);
+                    throw;
                 }
                 finally
                 {
@@ -113,7 +100,6 @@ namespace DAaVE.Library.DataCollection
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
         private async Task<IDictionary<DataPointType, DataPoint>> TryInvokePoll()
         {
             try
@@ -123,7 +109,7 @@ namespace DAaVE.Library.DataCollection
             catch (Exception e)
             {
                 this.errorSink.OnError("Exception when polling " + this.dataCollector + ": " + e.Message, e);
-                return null;
+                throw;
             }
         }
     }

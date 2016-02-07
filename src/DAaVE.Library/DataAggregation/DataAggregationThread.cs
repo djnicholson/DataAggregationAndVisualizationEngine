@@ -18,16 +18,6 @@ namespace DAaVE.Library.DataAggregation
     {
         private ManualResetEventSlim shutdownStart = new ManualResetEventSlim(false);
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA2204:Literals should be spelled correctly", MessageId = "TDataPointTypeEnum")]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
-        static DataAggregationThread()
-        {
-            if (!typeof(TDataPointType).IsEnum)
-            {
-                throw new NotSupportedException("TDataPointTypeEnum parameter must be an enum");
-            }
-        }
-
         internal DataAggregationThread(
             TDataPointType type,
             IDataPointAggregator aggregator,

@@ -2,10 +2,6 @@
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 
-// TODO: Fix these (don't swallow exceptions in background tasks).
-[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "DAaVE.Storage.Azure.CloudTableDataPointStorage`1+<StoreRawData>d__2.#MoveNext()")]
-[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "DAaVE.Storage.Azure.CloudTableDataPointStorage`1+<StoreAggregatedData>d__4.#MoveNext()")]
-
 namespace DAaVE.Storage.Azure
 {
     using System;
@@ -70,7 +66,7 @@ namespace DAaVE.Storage.Azure
         /// <see cref="System.Threading.ThreadPool"/>.
         /// </summary>
         /// <param name="rawDataSample">Data points produced by a collector. These may not be recent.</param>
-        public async void StoreRawData(IDictionary<TDataPointTypeEnum, DataPoint> rawDataSample)
+        public Task StoreRawData(IDictionary<TDataPointTypeEnum, DataPoint> rawDataSample)
         {
             DateTime postMarkedOnUtc = DateTime.UtcNow;
 
@@ -90,7 +86,7 @@ namespace DAaVE.Storage.Azure
                 }
             }
 
-            await Task.WhenAll(allTasks);
+            return Task.WhenAll(allTasks);
         }
 
         /// <summary>
@@ -135,7 +131,7 @@ namespace DAaVE.Storage.Azure
         /// <param name="type"></param>
         /// <param name="aggregatedDataPoints"></param>
         /// <param name="continuationToken"></param>
-        public async void StoreAggregatedData(
+        public Task StoreAggregatedData(
             TDataPointTypeEnum type,
             IEnumerable<AggregatedDataPoint> aggregatedDataPoints,
             object continuationToken)
@@ -162,7 +158,7 @@ namespace DAaVE.Storage.Azure
                 }
             }
 
-            await Task.WhenAll(allTasks);
+            return Task.WhenAll(allTasks);
         }
 
         private static IDictionary<string, TableBatchOperation> CreateInsertOperations(

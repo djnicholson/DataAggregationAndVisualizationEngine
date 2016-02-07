@@ -6,6 +6,7 @@ namespace DAaVE.Library.Storage
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Capable of receiving and persisting high volumes of incoming raw data points
@@ -19,7 +20,7 @@ namespace DAaVE.Library.Storage
         /// Store a sample of raw data points just received from a collector.
         /// </summary>
         /// <param name="rawDataSample">The raw data points.</param>
-        void StoreRawData(
+        Task StoreRawData(
             IDictionary<TDataPointTypeEnum, DataPoint> rawDataSample);
     }
 }

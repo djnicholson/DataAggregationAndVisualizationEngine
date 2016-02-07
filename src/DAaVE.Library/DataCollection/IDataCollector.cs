@@ -6,6 +6,7 @@ namespace DAaVE.Library.DataCollection
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -24,7 +25,7 @@ namespace DAaVE.Library.DataCollection
         /// <returns>
         /// A (possibly empty, or null) map of data points collected recently and (most likely) not yet reported.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
+        [SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures", Justification = "TODO: Pass a callback function as a parameter")]
         Task<IDictionary<TDataPointTypeEnum, DataPoint>> Poll();
 
         /// <summary>

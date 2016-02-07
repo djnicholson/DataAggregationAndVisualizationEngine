@@ -22,16 +22,6 @@ namespace DAaVE.Library.DataAggregation
         private IDictionary<TDataPointTypeEnum, DataAggregationThread<TDataPointTypeEnum>> aggregationThreads =
             new Dictionary<TDataPointTypeEnum, DataAggregationThread<TDataPointTypeEnum>>();
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA2204:Literals should be spelled correctly", MessageId = "TDataPointTypeEnum")]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
-        static DataAggregationOrchestrator()
-        {
-            if (!typeof(TDataPointTypeEnum).IsEnum)
-            {
-                throw new NotSupportedException("TDataPointTypeEnum parameter must be an enum");
-            }
-        }
-
         /// <summary>
         /// Creates a new instance of the DataAggregationOrchestrator class.
         /// </summary>
