@@ -2,10 +2,10 @@
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 
-using System;
-
 namespace DAaVE.Library.DataCollection
 {
+    using System;
+
     /// <summary>
     /// Denotes that a class (implementing <see cref="IDataCollector{DataPointType}"/>) should be created and
     /// polled by instances of <see cref="DataCollectionOrchestrator{DataPointType}"/>.

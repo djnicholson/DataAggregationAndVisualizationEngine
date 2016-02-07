@@ -2,12 +2,12 @@
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
 namespace DAaVE.Library.DataCollection
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+
     /// <summary>
     /// Capable of providing recent raw values for one or more data point types.
     /// </summary>

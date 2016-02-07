@@ -2,10 +2,10 @@
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 
-using System;
-
 namespace DAaVE.Library.ErrorHandling
 {
+    using System;
+
     /// <summary>
     /// A receiver for error messages.
     /// </summary>

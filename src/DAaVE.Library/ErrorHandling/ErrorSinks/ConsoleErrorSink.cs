@@ -2,10 +2,10 @@
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 
-using System;
-
 namespace DAaVE.Library.ErrorHandling.ErrorSinks
 {
+    using System;
+
     /// <summary>
     /// Writes all errors to the console with a common prefix string.
     /// </summary>

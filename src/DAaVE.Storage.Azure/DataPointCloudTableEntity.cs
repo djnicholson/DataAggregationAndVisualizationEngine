@@ -2,14 +2,14 @@
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 
-using DAaVE.Library;
-using Microsoft.WindowsAzure.Storage.Table;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-
 namespace DAaVE.Storage.Azure
 {
+    using DAaVE.Library;
+    using Microsoft.WindowsAzure.Storage.Table;
+    using System;
+    using System.Collections.Generic;
+    using System.Globalization;
+
     internal sealed class DataPointCloudTableEntity<TDataPointTypeEnum> : TableEntity
         where TDataPointTypeEnum : struct, IComparable, IFormattable
     {

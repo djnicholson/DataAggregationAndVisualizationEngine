@@ -2,10 +2,10 @@
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 
-using System;
-
 namespace DAaVE.Library
 {
+    using System;
+
     /// <summary>
     /// The raw value collected for a specific data point, at a specific time.
     /// </summary>

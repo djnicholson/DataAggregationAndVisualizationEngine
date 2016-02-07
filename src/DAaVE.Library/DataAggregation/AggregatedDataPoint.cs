@@ -2,10 +2,10 @@
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 
-using System;
-
 namespace DAaVE.Library.DataAggregation
 {
+    using System;
+
     /// <summary>
     /// An illustrative value of a specific data point at a certain time created by
     /// aggregating one or more actual data points.

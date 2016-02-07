@@ -2,11 +2,11 @@
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 
-using System;
-using System.Collections.Generic;
-
 namespace DAaVE.Library.Storage
 {
+    using System;
+    using System.Collections.Generic;
+
     /// <summary>
     /// Capable of receiving and persisting high volumes of incoming raw data points
     /// at low caller-facing latency.

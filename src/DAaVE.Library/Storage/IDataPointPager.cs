@@ -2,12 +2,12 @@
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 
-using DAaVE.Library.DataAggregation;
-using System;
-using System.Collections.Generic;
-
 namespace DAaVE.Library.Storage
 {
+    using DAaVE.Library.DataAggregation;
+    using System;
+    using System.Collections.Generic;
+
     /// <summary>
     /// Exposes a continuous stream of raw collected data points as a sequence of pages.
     /// </summary>

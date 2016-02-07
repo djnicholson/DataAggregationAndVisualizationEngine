@@ -2,14 +2,14 @@
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 
-using DAaVE.Library.ErrorHandling;
-using DAaVE.Library.Storage;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace DAaVE.Library.DataAggregation
 {
+    using DAaVE.Library.ErrorHandling;
+    using DAaVE.Library.Storage;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+
     /// <summary>
     /// Constants used during the orchestration of various aggregators.
     /// </summary>

@@ -2,10 +2,10 @@
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 
-using System.Collections.Generic;
-
 namespace DAaVE.Library.DataAggregation
 {
+    using System.Collections.Generic;
+
     /// <summary>
     /// Given a continuous segment of raw collected data points, produces a stream of corresponding
     /// aggregated points.
