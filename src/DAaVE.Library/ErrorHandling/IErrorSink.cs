@@ -1,4 +1,8 @@
-﻿using System;
+﻿// <copyright file="IErrorSink.cs" company="David Nicholson">
+//     Copyright (c) David Nicholson. All rights reserved.
+// </copyright>
+
+using System;
 
 namespace DAaVE.Library.ErrorHandling
 {

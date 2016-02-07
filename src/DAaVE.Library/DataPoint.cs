@@ -1,4 +1,8 @@
-﻿using System;
+﻿// <copyright file="DataPoint.cs" company="David Nicholson">
+//     Copyright (c) David Nicholson. All rights reserved.
+// </copyright>
+
+using System;
 
 namespace DAaVE.Library
 {

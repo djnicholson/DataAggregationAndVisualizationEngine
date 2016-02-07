@@ -1,4 +1,8 @@
-﻿using System;
+﻿// <copyright file="IDataCollector.cs" company="David Nicholson">
+//     Copyright (c) David Nicholson. All rights reserved.
+// </copyright>
+
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

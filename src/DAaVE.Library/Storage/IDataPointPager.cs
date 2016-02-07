@@ -1,4 +1,8 @@
-﻿using DAaVE.Library.DataAggregation;
+﻿// <copyright file="IDataPointPager.cs" company="David Nicholson">
+//     Copyright (c) David Nicholson. All rights reserved.
+// </copyright>
+
+using DAaVE.Library.DataAggregation;
 using System;
 using System.Collections.Generic;
 

@@ -1,4 +1,8 @@
-﻿using DAaVE.Library;
+﻿// <copyright file="DataPointCloudTableEntity.cs" company="David Nicholson">
+//     Copyright (c) David Nicholson. All rights reserved.
+// </copyright>
+
+using DAaVE.Library;
 using Microsoft.WindowsAzure.Storage.Table;
 using System;
 using System.Collections.Generic;

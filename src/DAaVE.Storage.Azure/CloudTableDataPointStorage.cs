@@ -1,4 +1,8 @@
-﻿using DAaVE.Library;
+﻿// <copyright file="CloudTableDataPointStorage.cs" company="David Nicholson">
+//     Copyright (c) David Nicholson. All rights reserved.
+// </copyright>
+
+using DAaVE.Library;
 using DAaVE.Library.DataAggregation;
 using DAaVE.Library.Storage;
 using Microsoft.WindowsAzure.Storage;

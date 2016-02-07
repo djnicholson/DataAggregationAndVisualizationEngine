@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿// <copyright file="IDataPointAggregator.cs" company="David Nicholson">
+//     Copyright (c) David Nicholson. All rights reserved.
+// </copyright>
+
+using System.Collections.Generic;
 
 namespace DAaVE.Library.DataAggregation
 {

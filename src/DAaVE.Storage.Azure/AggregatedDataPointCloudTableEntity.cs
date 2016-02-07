@@ -1,4 +1,8 @@
-﻿using DAaVE.Library.DataAggregation;
+﻿// <copyright file="AggregatedDataPointCloudTableEntity.cs" company="David Nicholson">
+//     Copyright (c) David Nicholson. All rights reserved.
+// </copyright>
+
+using DAaVE.Library.DataAggregation;
 using Microsoft.WindowsAzure.Storage.Table;
 using System;
 using System.Collections.Generic;

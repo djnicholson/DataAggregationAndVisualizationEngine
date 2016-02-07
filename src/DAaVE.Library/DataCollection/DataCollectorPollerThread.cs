@@ -1,4 +1,8 @@
-﻿using DAaVE.Library.ErrorHandling;
+﻿// <copyright file="DataCollectorPollerThread.cs" company="David Nicholson">
+//     Copyright (c) David Nicholson. All rights reserved.
+// </copyright>
+
+using DAaVE.Library.ErrorHandling;
 using System;
 using System.Collections.Generic;
 using System.Threading;
