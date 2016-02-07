@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DAaVE.Library.DataAggregation
 {
-    internal class DataAggregationThread<TDataPointType> : IDisposable
+    internal sealed class DataAggregationThread<TDataPointType> : IDisposable
         where TDataPointType : struct, IComparable, IFormattable
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA2204:Literals should be spelled correctly", MessageId = "TDataPointTypeEnum")]

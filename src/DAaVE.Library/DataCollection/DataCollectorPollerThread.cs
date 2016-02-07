@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DAaVE.Library.DataCollection
 {
-    internal class DataCollectorPollerThread<DataPointType> : IDisposable
+    internal sealed class DataCollectorPollerThread<DataPointType> : IDisposable
             where DataPointType : struct, IComparable, IFormattable
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA2204:Literals should be spelled correctly", MessageId = "TDataPointTypeEnum")]

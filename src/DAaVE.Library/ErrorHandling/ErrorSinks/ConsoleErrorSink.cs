@@ -5,7 +5,7 @@ namespace DAaVE.Library.ErrorHandling.ErrorSinks
     /// <summary>
     /// Writes all errors to the console with a common prefix string.
     /// </summary>
-    public class ConsoleErrorSink : IErrorSink
+    public sealed class ConsoleErrorSink : IErrorSink
     {
         private string prefix;
 

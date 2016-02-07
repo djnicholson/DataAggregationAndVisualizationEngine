@@ -6,7 +6,7 @@ namespace DAaVE.Library.DataAggregation
     /// An illustrative value of a specific data point at a certain time created by
     /// aggregating one or more actual data points.
     /// </summary>
-    public class AggregatedDataPoint
+    public sealed class AggregatedDataPoint
     {
         /// <summary>
         /// The time being represented (in UTC).

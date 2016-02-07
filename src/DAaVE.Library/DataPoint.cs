@@ -5,7 +5,7 @@ namespace DAaVE.Library
     /// <summary>
     /// The raw value collected for a specific data point, at a specific time.
     /// </summary>
-    public class DataPoint
+    public sealed class DataPoint
     {
         /// <summary>
         /// Gets or sets the time of collection.
