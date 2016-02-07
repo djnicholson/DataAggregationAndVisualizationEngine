@@ -87,6 +87,7 @@
   <ItemGroup>
     <Compile Include="AggregatedDataPointCloudTableEntity.cs" />
     <Compile Include="CloudTableDataPointStorage.cs" />
+    <Compile Include="CloudTableDataPointStorageStatic.cs" />
     <Compile Include="DataPointCloudTableEntity.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

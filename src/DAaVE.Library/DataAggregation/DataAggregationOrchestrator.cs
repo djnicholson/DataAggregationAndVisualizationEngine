@@ -12,22 +12,6 @@ namespace DAaVE.Library.DataAggregation
     using DAaVE.Library.Storage;
 
     /// <summary>
-    /// Constants used during the orchestration of various aggregators.
-    /// </summary>
-    public static class DataAggregationOrchestrator
-    {
-        /// <summary>
-        /// Pagers will be polled this often for the next page of data.
-        /// </summary>
-        public static readonly TimeSpan SleepDurationOnDataExhaustion = TimeSpan.FromMinutes(0.5);
-
-        /// <summary>
-        /// Time aggregation will sleep for upon an error.
-        /// </summary>
-        public static readonly TimeSpan SleepDurationOnError = TimeSpan.FromMinutes(0.5);
-    }
-
-    /// <summary>
     /// Continually reads raw collected data for each data point type and passes it into an aggregator; the
     /// output from the aggregator is stored.
     /// </summary>
