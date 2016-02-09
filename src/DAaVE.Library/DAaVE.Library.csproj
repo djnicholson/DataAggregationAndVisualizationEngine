@@ -42,7 +42,4 @@
   <ItemGroup>
     <Folder Include="Query\" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
 </Project>
