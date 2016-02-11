@@ -54,6 +54,7 @@
     <Compile Include="DataPointCloudTableEntity.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SinglePartitionRawDataCollection.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DaAVE.Library\DAaVE.Library.csproj">
