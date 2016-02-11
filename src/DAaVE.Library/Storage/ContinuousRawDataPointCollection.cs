@@ -82,50 +82,5 @@ namespace DAaVE.Library.Storage
                 this.rawDataPoints.OrderByDescending(keySelector, comparer) :
                 this.rawDataPoints.OrderBy(keySelector, comparer);
         }
-
-        /// <summary>
-        /// Represents an empty (trivially sorted) collection of raw data points.
-        /// </summary>
-        private class EmptyRawDataPointCollection : ContinuousRawDataPointCollection
-        {
-            /// <summary>
-            /// A singleton instance.
-            /// </summary>
-            private static readonly EmptyRawDataPointCollection InstanceInternal = new EmptyRawDataPointCollection();
-
-            /// <summary>
-            /// A concrete implementation of an empty <see cref="IOrderedEnumerable{TElement}"/>.
-            /// </summary>
-            private static readonly IOrderedEnumerable<DataPoint> EmptyArrayAsOrderedEnumerable =
-                (new DataPoint[0]).OrderBy(_ => 0);
-
-            /// <summary>
-            /// Initializes a new instance of the EmptyRawDataPointCollection class.
-            /// </summary>
-            public EmptyRawDataPointCollection() : base(EmptyArrayAsOrderedEnumerable)
-            {
-            }
-
-            /// <summary>
-            /// Gets a reference to the singleton instance of EmptyRawDataPointCollection.
-            /// </summary>
-            public static EmptyRawDataPointCollection Instance
-            {
-                get
-                {
-                    return InstanceInternal;
-                }
-            }
-
-            /// <summary>
-            /// Does nothing.
-            /// </summary>
-            /// <param name="aggregatedDataPoints">This parameter is not used.</param>
-            /// <returns>A running (or already completed) no-op task.</returns>
-            public override Task ProvideAggregatedData(IEnumerable<AggregatedDataPoint> aggregatedDataPoints)
-            {
-                return Task.Run(() => { });
-            }
-        }
     }
 }
