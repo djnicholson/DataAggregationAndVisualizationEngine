@@ -1,6 +1,7 @@
 ﻿// <copyright file="IDataCollector.cs" company="David Nicholson">
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
+// <summary>See class header.</summary>
 
 namespace DAaVE.Library.DataCollection
 {
@@ -12,7 +13,7 @@ namespace DAaVE.Library.DataCollection
     /// <summary>
     /// Capable of providing recent raw values for one or more data point types.
     /// </summary>
-    /// <typeparam name="TDataPointTypeEnum">An enumeration of all possible data point types</typeparam>
+    /// <typeparam name="TDataPointTypeEnum">An enumeration of all possible data point types.</typeparam>
     public interface IDataCollector<TDataPointTypeEnum>
         where TDataPointTypeEnum : struct, IComparable, IFormattable
     {

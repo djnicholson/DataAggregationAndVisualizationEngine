@@ -1,6 +1,7 @@
 ﻿// <copyright file="DataCollectorPollerThread.cs" company="David Nicholson">
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
+// <summary>See class header.</summary>
 
 namespace DAaVE.Library.DataCollection
 {
@@ -104,7 +105,7 @@ namespace DAaVE.Library.DataCollection
         /// Code invoked periodically (and potentially concurrently depending on speed of return)
         /// that makes an individual poll for data.
         /// </summary>
-        /// <param name="state">Not used.</param>
+        /// <param name="state">This parameter is not used.</param>
         private void PollLoop(object state)
         {
             if (this.pollLoopCancellationTokenSource.IsCancellationRequested)

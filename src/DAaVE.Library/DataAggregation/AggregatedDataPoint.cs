@@ -1,6 +1,7 @@
 ﻿// <copyright file="AggregatedDataPoint.cs" company="David Nicholson">
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
+// <summary>See class header.</summary>
 
 namespace DAaVE.Library.DataAggregation
 {
@@ -15,12 +16,14 @@ namespace DAaVE.Library.DataAggregation
         /// <summary>
         /// Gets or sets the time being represented (in UTC).
         /// </summary>
+        /// <value>The time being represented (in UTC).</value>
         public DateTime UtcTimestamp { get; set; }
 
         /// <summary>
         /// Gets or sets expected data point value at this time (based on aggregating nearby actual
         /// data point observations).
         /// </summary>
+        /// <value>Expected data point value at this time.</value>
         public double AggregatedValue { get; set; }
 
         /// <summary>

@@ -1,6 +1,7 @@
 ﻿// <copyright file="DataCollectionOrchestrator.cs" company="David Nicholson">
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
+// <summary>See class header.</summary>
 
 namespace DAaVE.Library.DataCollection
 {
@@ -92,7 +93,7 @@ namespace DAaVE.Library.DataCollection
         }
 
         /// <summary>
-        /// Shuts down all collectors
+        /// Shuts down all collectors.
         /// </summary>
         public void Dispose()
         {

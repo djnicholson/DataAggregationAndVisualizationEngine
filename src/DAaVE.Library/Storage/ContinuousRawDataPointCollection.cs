@@ -1,6 +1,7 @@
 ﻿// <copyright file="ContinuousRawDataPointCollection.cs" company="David Nicholson">
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
+// <summary>See class header.</summary>
 
 namespace DAaVE.Library.Storage
 {
@@ -35,6 +36,7 @@ namespace DAaVE.Library.Storage
         /// <summary>
         /// Gets a value representing a zero-length segment of raw data points.
         /// </summary>
+        /// <value>A zero-length segment of raw data points that ignores all aggregation responses.</value>
         public static ContinuousRawDataPointCollection Empty
         {
             get

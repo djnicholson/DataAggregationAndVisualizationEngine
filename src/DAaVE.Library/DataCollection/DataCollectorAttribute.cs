@@ -1,6 +1,7 @@
 ﻿// <copyright file="DataCollectorAttribute.cs" company="David Nicholson">
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
+// <summary>See class header.</summary>
 
 namespace DAaVE.Library.DataCollection
 {
@@ -29,11 +30,13 @@ namespace DAaVE.Library.DataCollection
         /// <summary>
         /// Gets or sets the interval at which the collector should be polled.
         /// </summary>
+        /// <value>The interval at which the collector should be polled.</value>
         public TimeSpan PollInterval { get; set; }
 
         /// <summary>
         /// Gets or sets the interval at which the collector should be polled (in seconds).
         /// </summary>
+        /// <value>The interval at which the collector should be polled.</value>
         public double PollIntervalInSeconds
         {
             get

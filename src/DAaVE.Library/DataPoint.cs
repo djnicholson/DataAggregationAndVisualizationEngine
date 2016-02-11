@@ -1,6 +1,7 @@
 ﻿// <copyright file="DataPoint.cs" company="David Nicholson">
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
+// <summary>See class header.</summary>
 
 namespace DAaVE.Library
 {
@@ -12,13 +13,15 @@ namespace DAaVE.Library
     public struct DataPoint
     {
         /// <summary>
-        /// Gets or sets the time of collection.
+        /// Gets or sets the time of the observation..
         /// </summary>
+        /// <value>The time of the observation..</value>
         public DateTime UtcTimestamp { get; set; }
 
         /// <summary>
-        /// Gets or sets the value.
+        /// Gets or sets the raw value observed at this time.
         /// </summary>
+        /// <value>The raw value observed at this time.</value>
         public double Value { get; set; }
 
         /// <summary>

@@ -1,6 +1,7 @@
 ﻿// <copyright file="IDataPointAggregator.cs" company="David Nicholson">
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
+// <summary>See class header.</summary>
 
 namespace DAaVE.Library.DataAggregation
 {

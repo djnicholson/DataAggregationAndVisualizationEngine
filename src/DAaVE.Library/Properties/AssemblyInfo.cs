@@ -1,6 +1,7 @@
 ﻿// <copyright file="AssemblyInfo.cs" company="David Nicholson">
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
+// <summary>Assembly-level attributes.</summary>
 
 using System;
 using System.Reflection;

@@ -1,6 +1,7 @@
 ﻿// <copyright file="AverageBySecondDataPointAggregator.cs" company="David Nicholson">
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
+// <summary>See class header.</summary>
 
 namespace DAaVE.Library.DataAggregation.Aggregators
 {
@@ -43,7 +44,7 @@ namespace DAaVE.Library.DataAggregation.Aggregators
         /// observations happening on the 0'th millisecond of each second).
         /// </summary>
         /// <param name="input">The time-stamp to truncate.</param>
-        /// <returns>The input time-stamp with any components more accurate than seconds set to 0</returns>
+        /// <returns>The input time-stamp with any components more accurate than seconds set to 0.</returns>
         private static DateTime TruncateToSecondsUtc(DateTime input)
         {
             return new DateTime(input.Year, input.Month, input.Day, input.Hour, input.Minute, input.Second, input.Kind);
