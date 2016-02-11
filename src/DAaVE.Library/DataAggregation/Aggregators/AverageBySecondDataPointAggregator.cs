@@ -15,19 +15,18 @@ namespace DAaVE.Library.DataAggregation.Aggregators
     public sealed class AverageBySecondDataPointAggregator : IDataPointAggregator
     {
         /// <inheritdoc />
-        public IEnumerable<AggregatedDataPoint> Aggregate(IEnumerable<DataPoint> continuousDataSegment)
+        public IEnumerable<AggregatedDataPoint> Aggregate(IOrderedEnumerable<DataPoint> continuousDataSegment)
         {
-            DataPoint[] remainingPoints = continuousDataSegment.ToArray();
-
-            while (remainingPoints.Count() != 0)
+            IEnumerable<DataPoint> remainingPoints = continuousDataSegment;
+            while (remainingPoints.Any())
             {
                 DateTime aggregateUtcTime = TruncateToSecondsUtc(remainingPoints.First().UtcTimestamp);
 
                 Func<DataPoint, bool> inAggregationWindow =
                     p => TruncateToSecondsUtc(p.UtcTimestamp).Ticks == aggregateUtcTime.Ticks;
 
-                IEnumerable<DataPoint> pointsUnderConsideration = remainingPoints.Where(inAggregationWindow);
-                remainingPoints = remainingPoints.Where(p => !inAggregationWindow(p)).ToArray();
+                IEnumerable<DataPoint> pointsUnderConsideration = remainingPoints.TakeWhile(inAggregationWindow);
+                remainingPoints = remainingPoints.SkipWhile(p => !inAggregationWindow(p));
 
                 yield return new AggregatedDataPoint()
                 {

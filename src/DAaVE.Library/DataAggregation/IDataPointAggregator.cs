@@ -5,6 +5,7 @@
 namespace DAaVE.Library.DataAggregation
 {
     using System.Collections.Generic;
+    using System.Linq;
 
     /// <summary>
     /// Given a continuous segment of raw collected data points, produces a stream of corresponding
@@ -16,8 +17,10 @@ namespace DAaVE.Library.DataAggregation
         /// Aggregates the provided raw data points.
         /// Implementations must be deterministic (to support stateless aggregation failover).
         /// </summary>
-        /// <param name="continuousDataSegment">A continuous segment of raw collected data points.</param>
-        /// <returns>A stream of aggregated points.</returns>
-        IEnumerable<AggregatedDataPoint> Aggregate(IEnumerable<DataPoint> continuousDataSegment);
+        /// <param name="continuousDataSegment">
+        /// A continuous segment of raw observed data point values (in ascending order by collection time).
+        /// </param>
+        /// <returns>A stream of aggregated points in arbitrary order.</returns>
+        IEnumerable<AggregatedDataPoint> Aggregate(IOrderedEnumerable<DataPoint> continuousDataSegment);
     }
 }
