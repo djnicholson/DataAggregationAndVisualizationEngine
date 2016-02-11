@@ -14,8 +14,14 @@ namespace DAaVE.Library.DataAggregation
     public interface IDataPointAggregator
     {
         /// <summary>
-        /// Aggregates the provided raw data points.
-        /// Implementations must be deterministic (to support stateless aggregation failover).
+        /// Aggregates the provided raw data points. The mapping from observation time to aggregation 
+        /// timestamp must be fixed, This facilitates: 
+        /// - Continual creation of increasingly accurate aggregation of a recent time window as more raw
+        ///   data observations become available.
+        /// - Safe reprocessing of raw data from past dates if there is uncertainty about whether they were
+        ///   aggregated, or whether the aggregation was correct.
+        /// - Failover between aggregator instances without quorum (at the expense of redundant re-computation
+        ///   of some aggregations during the failover period).
         /// </summary>
         /// <param name="continuousDataSegment">
         /// A continuous segment of raw observed data point values (in ascending order by collection time).
