@@ -29,7 +29,7 @@
     <Compile Include="DataCollection\DataCollectionOrchestrator.cs" />
     <Compile Include="DataCollection\DataCollectionOrchestratorStatic.cs" />
     <Compile Include="DataCollection\DataCollectorAttribute.cs" />
-    <Compile Include="DataCollection\DataCollectorPollerThread.cs" />
+    <Compile Include="DataCollection\DataCollectorPollerBackgroundWorker.cs" />
     <Compile Include="DataCollection\IDataCollector.cs" />
     <Compile Include="DataPoint.cs" />
     <Compile Include="ErrorHandling\ErrorSinks\ConsoleErrorSink.cs" />

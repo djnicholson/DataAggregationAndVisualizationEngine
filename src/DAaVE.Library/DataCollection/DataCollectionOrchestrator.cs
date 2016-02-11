@@ -25,8 +25,8 @@ namespace DAaVE.Library.DataCollection
         /// <summary>
         /// All threads polling data collectors.
         /// </summary>
-        private IDictionary<Type, DataCollectorPollerThread<TDataPointTypeEnum>> pollerThreads =
-            new Dictionary<Type, DataCollectorPollerThread<TDataPointTypeEnum>>();
+        private IDictionary<Type, DataCollectorPollerBackgroundWorker<TDataPointTypeEnum>> pollerThreads =
+            new Dictionary<Type, DataCollectorPollerBackgroundWorker<TDataPointTypeEnum>>();
 
         /// <summary>
         /// Whether a shut down is currently in progress. Can immediately be considered valid in any thread that has
@@ -72,14 +72,14 @@ namespace DAaVE.Library.DataCollection
                     DataCollectorAttribute dataCollectorAttribute =
                         newDataCollector.GetType().GetCustomAttribute<DataCollectorAttribute>();
 
-                    DataCollectorPollerThread<TDataPointTypeEnum> existingPollerThread;
+                    DataCollectorPollerBackgroundWorker<TDataPointTypeEnum> existingPollerThread;
                     Type dataCollectorType = newDataCollector.GetType();
                     if (this.pollerThreads.TryGetValue(dataCollectorType, out existingPollerThread))
                     {
                         existingPollerThread.Dispose();
                     }
 
-                    var newPollerThread = new DataCollectorPollerThread<TDataPointTypeEnum>(
+                    var newPollerThread = new DataCollectorPollerBackgroundWorker<TDataPointTypeEnum>(
                         taskFactory,
                         newDataCollector,
                         resultProcessor: results => dataPointFireHose.StoreRawData(results),
@@ -101,7 +101,7 @@ namespace DAaVE.Library.DataCollection
 
             lock (this.pollerThreads)
             {
-                foreach (DataCollectorPollerThread<TDataPointTypeEnum> pollingThread in this.pollerThreads.Select(_ => _.Value))
+                foreach (DataCollectorPollerBackgroundWorker<TDataPointTypeEnum> pollingThread in this.pollerThreads.Select(_ => _.Value))
                 {
                     pollingThread.Dispose();
                 }

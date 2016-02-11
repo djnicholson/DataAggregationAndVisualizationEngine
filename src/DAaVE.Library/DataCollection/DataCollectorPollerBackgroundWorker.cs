@@ -1,4 +1,4 @@
-﻿// <copyright file="DataCollectorPollerThread.cs" company="David Nicholson">
+﻿// <copyright file="DataCollectorPollerBackgroundWorker.cs" company="David Nicholson">
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 // <summary>See class header.</summary>
@@ -13,10 +13,10 @@ namespace DAaVE.Library.DataCollection
     using DAaVE.Library.ErrorHandling;
 
     /// <summary>
-    /// Continually polls a single data collector.
+    /// Continually polls a single data collector, until disposed.
     /// </summary>
     /// <typeparam name="DataPointType">The type of data point produced by the data collector.</typeparam>
-    internal sealed class DataCollectorPollerThread<DataPointType> : IDisposable
+    internal sealed class DataCollectorPollerBackgroundWorker<DataPointType> : IDisposable
             where DataPointType : struct, IComparable, IFormattable
     {
         /// <summary>
@@ -61,7 +61,7 @@ namespace DAaVE.Library.DataCollection
         private readonly ManualResetEventSlim pollingLoopTerminated;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DataCollectorPollerThread{DataPointType}"/> class.
+        /// Initializes a new instance of the <see cref="DataCollectorPollerBackgroundWorker{DataPointType}"/> class.
         /// </summary>
         /// <param name="taskFactory">Factory used to create tasks to invoke <see cref="dataCollector"/> within.</param>
         /// <param name="dataCollector">An instance of an implementation that can poll for the current value of a data point type.</param>
@@ -72,7 +72,7 @@ namespace DAaVE.Library.DataCollection
         /// available.
         /// </param>
         /// <param name="errorSink">Exceptional circumstances will be reported here.</param>
-        public DataCollectorPollerThread(
+        public DataCollectorPollerBackgroundWorker(
             TaskFactory taskFactory,
             IDataCollector<DataPointType> dataCollector,
             Action<IDictionary<DataPointType, DataPoint>> resultProcessor,
