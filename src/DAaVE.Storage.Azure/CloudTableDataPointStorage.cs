@@ -108,7 +108,7 @@ namespace DAaVE.Storage.Azure
         }
 
         /// <inheritdoc/>
-        public ContinuousRawDataPointCollection GetPageOfRawData(TDataPointTypeEnum type)
+        public ContiguousRawDataPointCollection GetPageOfRawData(TDataPointTypeEnum type)
         {
             this.bufferedRawDataPartitionsByType.AddOrUpdate(
                 key: type,
@@ -123,7 +123,7 @@ namespace DAaVE.Storage.Azure
                 if (!this.bufferedRawDataPartitionsByType.TryGetValue(type, out bufferedPartitions) || !bufferedPartitions.Any())
                 {
                     // Either empty, or very nearly empty (due to possible racing of concurrent calls to this method)
-                    return ContinuousRawDataPointCollection.Empty;
+                    return ContiguousRawDataPointCollection.Empty;
                 }
             }
 
@@ -131,7 +131,7 @@ namespace DAaVE.Storage.Azure
             if (nextPartitionData.Equals(default(KeyValuePair<string, DataPoint[]>)))
             {
                 // Definite racing of concurrent calls to this method. The buffer is nearly empty anyway so no work for this caller:
-                return ContinuousRawDataPointCollection.Empty;
+                return ContiguousRawDataPointCollection.Empty;
             }
 
             var firehosePartition = nextPartitionData.Key;

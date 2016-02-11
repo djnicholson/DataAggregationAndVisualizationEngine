@@ -1,4 +1,4 @@
-﻿// <copyright file="ContinuousRawDataPointCollection.cs" company="David Nicholson">
+﻿// <copyright file="ContiguousRawDataPointCollection.cs" company="David Nicholson">
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 // <summary>See class header.</summary>
@@ -14,10 +14,10 @@ namespace DAaVE.Library.Storage
     using DAaVE.Library.DataAggregation;
     
     /// <summary>
-    /// Represents a continuous segment of raw data points that are expected to be aggregated
+    /// Represents a contiguous segment of raw data points that are expected to be aggregated
     /// by some implementation of <see cref="IDataPointAggregator"/>.
     /// </summary>
-    public abstract class ContinuousRawDataPointCollection : IOrderedEnumerable<DataPoint>
+    public abstract class ContiguousRawDataPointCollection : IOrderedEnumerable<DataPoint>
     {
         /// <summary>
         /// All raw data points within this time segment, in ascending time order.
@@ -25,10 +25,10 @@ namespace DAaVE.Library.Storage
         private IOrderedEnumerable<DataPoint> rawDataPoints;
 
         /// <summary>
-        /// Initializes a new instance of the ContinuousRawDataPointCollection class.
+        /// Initializes a new instance of the ContiguousRawDataPointCollection class.
         /// </summary>
         /// <param name="rawDataPoints">All raw data points within this time segment, in ascending time order.</param>
-        protected ContinuousRawDataPointCollection(IOrderedEnumerable<DataPoint> rawDataPoints)
+        protected ContiguousRawDataPointCollection(IOrderedEnumerable<DataPoint> rawDataPoints)
         {
             this.rawDataPoints = rawDataPoints;
         }
@@ -37,7 +37,7 @@ namespace DAaVE.Library.Storage
         /// Gets a value representing a zero-length segment of raw data points.
         /// </summary>
         /// <value>A zero-length segment of raw data points that ignores all aggregation responses.</value>
-        public static ContinuousRawDataPointCollection Empty
+        public static ContiguousRawDataPointCollection Empty
         {
             get
             {
@@ -60,7 +60,7 @@ namespace DAaVE.Library.Storage
         /// <returns>See <see cref="GetEnumerator"/>.</returns>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return (this as ContinuousRawDataPointCollection).GetEnumerator();
+            return (this as ContiguousRawDataPointCollection).GetEnumerator();
         }
 
         /// <summary>

@@ -13,7 +13,7 @@ namespace DAaVE.Library.DataAggregation
     using DAaVE.Library.Storage;
 
     /// <summary>
-    /// Continually reads blocks (continuous segments) of raw observed data point values for each possible data point 
+    /// Continually reads blocks (contiguous segments) of raw observed data point values for each possible data point 
     /// type and passes these blocks into an aggregator; the output from the aggregator is stored.
     /// </summary>
     /// <typeparam name="TDataPointTypeEnum">An enumeration of all possible data point types.</typeparam>

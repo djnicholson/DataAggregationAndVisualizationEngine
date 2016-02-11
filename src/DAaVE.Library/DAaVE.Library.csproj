@@ -39,7 +39,7 @@
     <Compile Include="Storage\EmptyRawDataPointCollection.cs" />
     <Compile Include="Storage\IDataPointFireHose.cs" />
     <Compile Include="Storage\IDataPointPager.cs" />
-    <Compile Include="Storage\ContinuousRawDataPointCollection.cs" />
+    <Compile Include="Storage\ContiguousRawDataPointCollection.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Query\" />

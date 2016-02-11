@@ -8,7 +8,7 @@ namespace DAaVE.Library.Storage
     using System;
 
     /// <summary>
-    /// Exposes a continuous stream of raw collected data points as a sequence of pages.
+    /// Exposes a contiguous stream of raw collected data points as a sequence of pages.
     /// </summary>
     /// <typeparam name="TDataPointTypeEnum">An enumeration of all possible types of data point.</typeparam>
     public interface IDataPointPager<TDataPointTypeEnum>
@@ -23,6 +23,6 @@ namespace DAaVE.Library.Storage
         /// <returns>
         /// A set of raw data points for aggregation. Non-null, but possibly empty.
         /// </returns>
-        ContinuousRawDataPointCollection GetPageOfRawData(TDataPointTypeEnum type);
+        ContiguousRawDataPointCollection GetPageOfRawData(TDataPointTypeEnum type);
     }
 }

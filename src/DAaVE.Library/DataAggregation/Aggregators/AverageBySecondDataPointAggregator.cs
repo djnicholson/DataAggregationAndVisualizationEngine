@@ -16,9 +16,9 @@ namespace DAaVE.Library.DataAggregation.Aggregators
     public sealed class AverageBySecondDataPointAggregator : IDataPointAggregator
     {
         /// <inheritdoc />
-        public IEnumerable<AggregatedDataPoint> Aggregate(IOrderedEnumerable<DataPoint> continuousDataSegment)
+        public IEnumerable<AggregatedDataPoint> Aggregate(IOrderedEnumerable<DataPoint> contiguousDataSegment)
         {
-            IEnumerable<DataPoint> remainingPoints = continuousDataSegment;
+            IEnumerable<DataPoint> remainingPoints = contiguousDataSegment;
             while (remainingPoints.Any())
             {
                 DateTime aggregateUtcTime = TruncateToSecondsUtc(remainingPoints.First().UtcTimestamp);

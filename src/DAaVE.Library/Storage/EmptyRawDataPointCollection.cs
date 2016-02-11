@@ -15,7 +15,7 @@ namespace DAaVE.Library.Storage
     /// Represents an empty (trivially sorted) collection of raw data points.
     /// Ignores any data provided to <see cref="ProvideAggregatedData(IEnumerable{AggregatedDataPoint})"/>.
     /// </summary>
-    internal sealed class EmptyRawDataPointCollection : ContinuousRawDataPointCollection
+    internal sealed class EmptyRawDataPointCollection : ContiguousRawDataPointCollection
     {
         /// <summary>
         /// A singleton instance.

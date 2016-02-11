@@ -9,7 +9,7 @@ namespace DAaVE.Library.DataAggregation
     using System.Linq;
 
     /// <summary>
-    /// Given a continuous segment of raw collected data points, produces a stream of corresponding
+    /// Given a contiguous segment of raw collected data points, produces a stream of corresponding
     /// aggregated points.
     /// </summary>
     public interface IDataPointAggregator
@@ -24,10 +24,10 @@ namespace DAaVE.Library.DataAggregation
         /// - Failover between aggregator instances without quorum (at the expense of redundant re-computation
         ///   of some aggregations during the failover period).
         /// </summary>
-        /// <param name="continuousDataSegment">
-        /// A continuous segment of raw observed data point values (in ascending order by collection time).
+        /// <param name="contiguousDataSegment">
+        /// A contiguous segment of raw observed data point values (in ascending order by collection time).
         /// </param>
         /// <returns>A stream of aggregated points in arbitrary order.</returns>
-        IEnumerable<AggregatedDataPoint> Aggregate(IOrderedEnumerable<DataPoint> continuousDataSegment);
+        IEnumerable<AggregatedDataPoint> Aggregate(IOrderedEnumerable<DataPoint> contiguousDataSegment);
     }
 }

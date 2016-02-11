@@ -15,7 +15,7 @@ namespace DAaVE.Library.DataAggregation
     using DAaVE.Library.Storage;
 
     /// <summary>
-    /// Continually performs aggregation over continuous segments of observed values for a specific
+    /// Continually performs aggregation over contiguous segments of observed values for a specific
     /// data point type, until disposed.
     /// </summary>
     /// <typeparam name="TDataPointTypeEnum">An enumeration of all possible data point types.</typeparam>
@@ -50,7 +50,7 @@ namespace DAaVE.Library.DataAggregation
                 {
                     while (true)
                     {
-                        ContinuousRawDataPointCollection pageOfUnaggregatedData;
+                        ContiguousRawDataPointCollection pageOfUnaggregatedData;
                         do
                         {
                             pageOfUnaggregatedData = pager.GetPageOfRawData(type);

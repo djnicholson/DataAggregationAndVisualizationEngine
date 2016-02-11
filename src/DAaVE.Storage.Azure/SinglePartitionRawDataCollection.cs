@@ -22,7 +22,7 @@ namespace DAaVE.Storage.Azure
     /// Provides access to all raw data points in a single raw data partition.
     /// </summary>
     /// <typeparam name="TDataPointTypeEnum">An enumeration of all possible data point types.</typeparam>
-    internal class SinglePartitionRawDataCollection<TDataPointTypeEnum> : ContinuousRawDataPointCollection
+    internal class SinglePartitionRawDataCollection<TDataPointTypeEnum> : ContiguousRawDataPointCollection
         where TDataPointTypeEnum : struct, IComparable, IFormattable
     {
         /// <summary>
