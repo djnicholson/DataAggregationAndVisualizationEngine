@@ -1,4 +1,4 @@
-﻿// <copyright file="DataAggregationThread.cs" company="David Nicholson">
+﻿// <copyright file="DataAggregationBackgroundWorker.cs" company="David Nicholson">
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 
@@ -14,11 +14,12 @@ namespace DAaVE.Library.DataAggregation
     using DAaVE.Library.Storage;
 
     /// <summary>
-    /// Continually performs aggregation for a specific type of data points.
+    /// Continually performs aggregation over continuous segments of observed values for a specific
+    /// data point type, until disposed.
     /// </summary>
-    /// <typeparam name="TDataPointType">The type of data point being aggregated.</typeparam>
-    internal sealed class DataAggregationThread<TDataPointType> : IDisposable
-        where TDataPointType : struct, IComparable, IFormattable
+    /// <typeparam name="TDataPointTypeEnum">An enumeration of all possible data point types.</typeparam>
+    internal sealed class DataAggregationBackgroundWorker<TDataPointTypeEnum> : IDisposable
+        where TDataPointTypeEnum : struct, IComparable, IFormattable
     {
         /// <summary>
         /// Indicates that aggregation should now cease.
@@ -26,16 +27,16 @@ namespace DAaVE.Library.DataAggregation
         private ManualResetEventSlim shutdownStart = new ManualResetEventSlim(false);
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DataAggregationThread{TDataPointType}"/> class.
+        /// Initializes a new instance of the DataAggregationBackgroundWorker class.
         /// </summary>
-        /// <param name="type">The type of data point to aggregate in the this thread.</param>
+        /// <param name="type">The type of data point to aggregate in the this worker.</param>
         /// <param name="aggregator">The implementation of a specific aggregation technique.</param>
         /// <param name="pager">Provides access to raw data points.</param>
         /// <param name="errorSink">Exceptional circumstances during aggregation will be reported here.</param>
-        internal DataAggregationThread(
-            TDataPointType type,
+        internal DataAggregationBackgroundWorker(
+            TDataPointTypeEnum type,
             IDataPointAggregator aggregator,
-            IDataPointPager<TDataPointType> pager,
+            IDataPointPager<TDataPointTypeEnum> pager,
             IErrorSink errorSink)
         {
             object continuationTokenCurrent = null;

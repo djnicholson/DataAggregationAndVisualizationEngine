@@ -12,18 +12,18 @@ namespace DAaVE.Library.DataAggregation
     using DAaVE.Library.Storage;
 
     /// <summary>
-    /// Continually reads raw collected data for each data point type and passes it into an aggregator; the
-    /// output from the aggregator is stored.
+    /// Continually reads blocks (continuous segments) of raw observed data point values for each possible data point 
+    /// type and passes these blocks into an aggregator; the output from the aggregator is stored.
     /// </summary>
-    /// <typeparam name="TDataPointTypeEnum">The type of data point being aggregated.</typeparam>
+    /// <typeparam name="TDataPointTypeEnum">An enumeration of all possible data point types.</typeparam>
     public sealed class DataAggregationOrchestrator<TDataPointTypeEnum> : IDisposable
            where TDataPointTypeEnum : struct, IComparable, IFormattable
     {
         /// <summary>
         /// All aggregation threads being orchestrated.
         /// </summary>
-        private IDictionary<TDataPointTypeEnum, DataAggregationThread<TDataPointTypeEnum>> aggregationThreads =
-            new Dictionary<TDataPointTypeEnum, DataAggregationThread<TDataPointTypeEnum>>();
+        private IDictionary<TDataPointTypeEnum, DataAggregationBackgroundWorker<TDataPointTypeEnum>> aggregationThreads =
+            new Dictionary<TDataPointTypeEnum, DataAggregationBackgroundWorker<TDataPointTypeEnum>>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataAggregationOrchestrator{TDataPointTypeEnum}"/> class.
@@ -40,7 +40,7 @@ namespace DAaVE.Library.DataAggregation
         {
             foreach (TDataPointTypeEnum dataType in Enum.GetValues(typeof(TDataPointTypeEnum)).Cast<TDataPointTypeEnum>())
             {
-                var newThread = new DataAggregationThread<TDataPointTypeEnum>(
+                var newThread = new DataAggregationBackgroundWorker<TDataPointTypeEnum>(
                     dataType,
                     aggregator,
                     pager,
@@ -55,7 +55,7 @@ namespace DAaVE.Library.DataAggregation
         /// </summary>
         public void Dispose()
         {
-            foreach (DataAggregationThread<TDataPointTypeEnum> thread in this.aggregationThreads.Values)
+            foreach (DataAggregationBackgroundWorker<TDataPointTypeEnum> thread in this.aggregationThreads.Values)
             {
                 thread.Dispose();
             }

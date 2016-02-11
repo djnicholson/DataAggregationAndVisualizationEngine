@@ -9,7 +9,7 @@ namespace DAaVE.Library.DataAggregation
     using System;
 
     /// <summary>
-    /// Constants used during the orchestration of various aggregators.
+    /// Constants used during the orchestration of multiple aggregators.
     /// </summary>
     public static class DataAggregationOrchestrator
     {

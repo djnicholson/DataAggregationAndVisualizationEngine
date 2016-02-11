@@ -19,13 +19,14 @@ namespace DAaVE.Library.DataAggregation
 
         /// <summary>
         /// Gets or sets expected data point value at this time (based on aggregating nearby actual
-        /// data point collections).
+        /// data point observations).
         /// </summary>
         public double AggregatedValue { get; set; }
 
         /// <summary>
         /// Determines if the timestamps are identical.
-        /// Assumes consistency of re-aggregation so does not compare <see cref="AggregatedValue"/>.
+        /// Assumes consistency of re-aggregation (per <see cref="IDataPointAggregator"/>) so does not 
+        /// compare <see cref="AggregatedValue"/>.
         /// </summary>
         /// <param name="leftHandSide">Left hand side operand.</param>
         /// <param name="rightHandSide">Right hand side operand.</param>
