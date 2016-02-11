@@ -48,12 +48,10 @@ namespace DAaVE.Library.DataAggregation
                 {
                     while (true)
                     {
-                        object continuationTokenNext = continuationTokenCurrent;
-
-                        IEnumerable<DataPoint> pageOfUnaggregatedData;
+                        ContinuousRawDataPointCollection pageOfUnaggregatedData;
                         do
                         {
-                            pageOfUnaggregatedData = pager.ReadPageOfRawData(type, ref continuationTokenNext);
+                            pageOfUnaggregatedData = pager.GetPageOfRawData(type);
 
                             if (pageOfUnaggregatedData.Count() == 0)
                             {
@@ -67,9 +65,10 @@ namespace DAaVE.Library.DataAggregation
 
                         IEnumerable<AggregatedDataPoint> aggregatedData = aggregator.Aggregate(pageOfUnaggregatedData);
 
-                        pager.StoreAggregatedData(type, aggregatedData, continuationTokenNext);
+                        // TODO: Let this go async (it will be mostly network IO to Azure) and get started on the (probably CPU-heavy)
+                        // work of doing the next aggregation
+                        pageOfUnaggregatedData.ProvideAggregatedData(aggregatedData).Wait();
 
-                        continuationTokenCurrent = continuationTokenNext;
                         consecutiveErrorCount = 0;
                     }
                 }

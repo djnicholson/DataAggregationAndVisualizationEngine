@@ -43,22 +43,10 @@ namespace DAaVE.Storage.Azure
             };
 
         /// <summary>
-        /// Retries (at an exponentially decaying rate) for as long as the raw data being stored may still
-        /// be eligible for inclusion in the current or previous aggregation partition.
-        /// </summary>
-        private static readonly TableRequestOptions AggregatedDataStorageLongDrawnOutRetry =
-            new TableRequestOptions()
-            {
-                MaximumExecutionTime = 
-                    TimeSpan.FromMinutes(AggregatedDataPointCloudTableEntity<TDataPointTypeEnum>.MinutesOfAggregatedDataPerPage),
-                RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(1.0), int.MaxValue),
-            };
-
-        /// <summary>
         /// Data retrieved from storage but that could be issued to clients upon request.
         /// </summary>
-        private readonly ConcurrentDictionary<TDataPointTypeEnum, IDictionary<string, DataPoint[]>> rawDataPageBuffers =
-            new ConcurrentDictionary<TDataPointTypeEnum, IDictionary<string, DataPoint[]>>();
+        private readonly ConcurrentDictionary<TDataPointTypeEnum, ConcurrentDictionary<string, IOrderedEnumerable<DataPoint>>> bufferedRawDataPartitionsByType =
+            new ConcurrentDictionary<TDataPointTypeEnum, ConcurrentDictionary<string, IOrderedEnumerable<DataPoint>>>();
 
         /// <summary>
         /// The table where raw data points are stored.
@@ -120,65 +108,43 @@ namespace DAaVE.Storage.Azure
         }
 
         /// <inheritdoc/>
-        public IEnumerable<DataPoint> ReadPageOfRawData(TDataPointTypeEnum type, ref object continuationToken)
+        public ContinuousRawDataPointCollection GetPageOfRawData(TDataPointTypeEnum type)
         {
-            this.rawDataPageBuffers.AddOrUpdate(
-                key: type, 
-                addValueFactory: _ => new Dictionary<string, DataPoint[]>(), 
+            this.bufferedRawDataPartitionsByType.AddOrUpdate(
+                key: type,
+                addValueFactory: _ => new ConcurrentDictionary<string, IOrderedEnumerable<DataPoint>>(),
                 updateValueFactory: (_, existing) => existing);
 
-            string lastPartition = continuationToken as string;
-            if (lastPartition != null)
-            {
-                this.rawDataPageBuffers[type].Remove(lastPartition);
-            }
-
-            IDictionary<string, DataPoint[]> nextPage = null;
-            if (!this.rawDataPageBuffers.TryGetValue(type, out nextPage) || (nextPage.Count == 0))
+            ConcurrentDictionary<string, IOrderedEnumerable<DataPoint>> bufferedPartitions = null;
+            if (!this.bufferedRawDataPartitionsByType.TryGetValue(type, out bufferedPartitions) || !bufferedPartitions.Any())
             {
                 this.RebuildRawDataPageBuffersForType(type);
-                if (!this.rawDataPageBuffers.TryGetValue(type, out nextPage) || (nextPage.Count == 0))
+
+                if (!this.bufferedRawDataPartitionsByType.TryGetValue(type, out bufferedPartitions) || !bufferedPartitions.Any())
                 {
-                    continuationToken = null;
-                    return new DataPoint[0];
+                    // Either empty, or very nearly empty (due to possible racing of concurrent calls to this method)
+                    return ContinuousRawDataPointCollection.Empty;
                 }
             }
 
-            string nextPartition = nextPage.Keys.First();
-
-            continuationToken = nextPartition;
-            return nextPage[nextPartition];
-        }
-
-        /// <inheritdoc/>
-        public Task StoreAggregatedData(
-            TDataPointTypeEnum type,
-            IEnumerable<AggregatedDataPoint> aggregatedDataPoints,
-            object continuationToken)
-        {
-            IEnumerable<IGrouping<string, AggregatedDataPointCloudTableEntity<TDataPointTypeEnum>>> aggregatedDataPointEntitiesByPartition = aggregatedDataPoints
-                .Select(p => new AggregatedDataPointCloudTableEntity<TDataPointTypeEnum>(type, p, GetPartitionKey(continuationToken)))
-                .GroupBy(pe => pe.PartitionKey);
-
-            List<Task> allTasks = new List<Task>(aggregatedDataPointEntitiesByPartition.Count());
-
-            foreach (IGrouping<string, AggregatedDataPointCloudTableEntity<TDataPointTypeEnum>> aggregatedDataPointsInSamePartition in aggregatedDataPointEntitiesByPartition)
+            KeyValuePair<string, IOrderedEnumerable<DataPoint>> nextPartitionData = bufferedPartitions.FirstOrDefault();
+            if (nextPartitionData.Equals(default(KeyValuePair<string, DataPoint[]>)))
             {
-                TableBatchOperation batch = new TableBatchOperation();
-
-                foreach (AggregatedDataPointCloudTableEntity<TDataPointTypeEnum> aggregatedDataPoint in aggregatedDataPointsInSamePartition.ToArray())
-                {
-                    batch.Add(TableOperation.InsertOrReplace(aggregatedDataPoint));
-                }
-
-                if (batch.Any())
-                {
-                    allTasks.Add(
-                        this.aggregationTable.ExecuteBatchAsync(batch, requestOptions: AggregatedDataStorageLongDrawnOutRetry, operationContext: new OperationContext()));
-                }
+                // Definite racing of concurrent calls to this method. The buffer is nearly empty anyway so no work for this caller:
+                return ContinuousRawDataPointCollection.Empty;
             }
 
-            return Task.WhenAll(allTasks);
+            var firehosePartition = nextPartitionData.Key;
+            return new SinglePartition(
+                type,
+                firehosePartition, 
+                this.aggregationTable, 
+                onAggregationSuccess: () => 
+                {
+                    IOrderedEnumerable<DataPoint> _;
+                    this.bufferedRawDataPartitionsByType[type].TryRemove(firehosePartition, out _);
+                }, 
+                rawDataPoints: nextPartitionData.Value);
         }
 
         /// <summary>
@@ -229,18 +195,114 @@ namespace DAaVE.Storage.Azure
             {
                 var tableQuery = new TableQuery<DataPointCloudTableEntity<TDataPointTypeEnum>>();
 
+                //// TODO: Async IO for Azure HTTP requests here.
+
                 IEnumerable<DataPoint> pointsInPartition = this.firehoseTable
                     .ExecuteQuery(tableQuery.Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partition)))
                     .Where(ce => (ce.CollectionTimeUtc + CloudTableDataPointStorage.ProcessingDelay) < utcNow)
                     .Select(ce => new DataPoint() { UtcTimestamp = ce.CollectionTimeUtc, Value = ce.Value });
 
-                if (pointsInPartition.Count() > 0)
+                if (pointsInPartition.Any())
                 {
-                    lock (this.rawDataPageBuffers)
+                    this.bufferedRawDataPartitionsByType[type][partition] = pointsInPartition.OrderBy(dp => dp.UtcTimestamp);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Provides access to all raw data points in a single raw data partition.
+        /// </summary>
+        private class SinglePartition : ContinuousRawDataPointCollection
+        {
+            /// <summary>
+            /// Retries (at an exponentially decaying rate) for as long as the raw data being stored may still
+            /// be eligible for inclusion in the current or previous aggregation partition.
+            /// </summary>
+            private static readonly TableRequestOptions AggregatedDataStorageLongDrawnOutRetry =
+                new TableRequestOptions()
+                {
+                    MaximumExecutionTime =
+                        TimeSpan.FromMinutes(AggregatedDataPointCloudTableEntity<TDataPointTypeEnum>.MinutesOfAggregatedDataPerPage),
+                    RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(1.0), int.MaxValue),
+                };
+
+            /// <summary>
+            /// The type of data being queried.
+            /// </summary>
+            private readonly TDataPointTypeEnum seriesDataPointType;
+
+            /// <summary>
+            /// The key for the partition in the raw data table that these points were stored in.
+            /// </summary>
+            private readonly string firehosePartitionKey;
+
+            /// <summary>
+            /// The table where aggregated data points are stored.
+            /// </summary>
+            private readonly CloudTable aggregationTable;
+
+            /// <summary>
+            /// Code that can be invoked whenever a successful aggregation has happened, and the results have been committed to
+            /// storage. Can be invoked multiple times for the same parameters, must be invoked at least once per partition that
+            /// is successfully aggregated.
+            /// </summary>
+            private readonly Action onAggregationSuccess;
+
+            /// <summary>
+            /// Initializes a new instance of the SinglePartition class.
+            /// </summary>
+            /// <param name="seriesDataPointType">The type of data being queried.</param>
+            /// <param name="firehosePartitionKey">The key for the partition in the raw data table that these points were stored in.</param>
+            /// <param name="aggregationTable">The table where corresponding aggregated data should be stored.</param>
+            /// <param name="onAggregationSuccess">
+            /// Code that will be invoked whenever a successful aggregation has happened, and the results have been committed to
+            /// storage. May be invoked multiple times for the same partition.
+            /// </param>
+            /// <param name="rawDataPoints">
+            /// All raw data points of type <paramref name="seriesDataPointType"/> in the <paramref name="firehosePartitionKey"/> partition of 
+            /// the fire hose table. In ascending time order.
+            /// </param>
+            public SinglePartition(
+                TDataPointTypeEnum seriesDataPointType,
+                string firehosePartitionKey,
+                CloudTable aggregationTable,
+                Action onAggregationSuccess,
+                IOrderedEnumerable<DataPoint> rawDataPoints) : base(rawDataPoints)
+            {
+                this.seriesDataPointType = seriesDataPointType;
+                this.firehosePartitionKey = firehosePartitionKey;
+                this.aggregationTable = aggregationTable;
+                this.onAggregationSuccess = onAggregationSuccess;
+            }
+
+            /// <inheritdoc/>
+            public override Task ProvideAggregatedData(IEnumerable<AggregatedDataPoint> aggregatedDataPoints)
+            {
+                IEnumerable<IGrouping<string, AggregatedDataPointCloudTableEntity<TDataPointTypeEnum>>> aggregatedDataPointEntitiesByPartition = aggregatedDataPoints
+                    .Select(p => new AggregatedDataPointCloudTableEntity<TDataPointTypeEnum>(this.seriesDataPointType, p, this.firehosePartitionKey))
+                    .GroupBy(pe => pe.PartitionKey);
+
+                List<Task> allBatchInsertOperations = new List<Task>(aggregatedDataPointEntitiesByPartition.Count());
+
+                foreach (IGrouping<string, AggregatedDataPointCloudTableEntity<TDataPointTypeEnum>> aggregatedDataPointsInSamePartition in aggregatedDataPointEntitiesByPartition)
+                {
+                    TableBatchOperation batch = new TableBatchOperation();
+
+                    foreach (AggregatedDataPointCloudTableEntity<TDataPointTypeEnum> aggregatedDataPoint in aggregatedDataPointsInSamePartition.ToArray())
                     {
-                        this.rawDataPageBuffers[type][partition] = pointsInPartition.ToArray();
+                        batch.Add(TableOperation.InsertOrReplace(aggregatedDataPoint));
+                    }
+
+                    if (batch.Any())
+                    {
+                        allBatchInsertOperations.Add(
+                            this.aggregationTable.ExecuteBatchAsync(batch, requestOptions: AggregatedDataStorageLongDrawnOutRetry, operationContext: new OperationContext()));
                     }
                 }
+
+                return Task.WhenAll(
+                    Task.WhenAll(allBatchInsertOperations),
+                    Task.Run(this.onAggregationSuccess));
             }
         }
     }
