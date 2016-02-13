@@ -28,9 +28,10 @@
     <Compile Include="DataAggregation\IDataPointAggregator.cs" />
     <Compile Include="DataCollection\DataCollectionOrchestrator.cs" />
     <Compile Include="DataCollection\DataCollectionOrchestratorStatic.cs" />
+    <Compile Include="DataCollection\DataCollectorObserver.cs" />
+    <Compile Include="DataCollection\DataCollector.cs" />
+    <Compile Include="DataCollection\Observation.cs" />
     <Compile Include="DataCollection\DataCollectorAttribute.cs" />
-    <Compile Include="DataCollection\DataCollectorPollerBackgroundWorker.cs" />
-    <Compile Include="DataCollection\IDataCollector.cs" />
     <Compile Include="DataPoint.cs" />
     <Compile Include="ErrorHandling\ErrorSinks\ConsoleErrorSink.cs" />
     <Compile Include="ErrorHandling\IErrorSink.cs" />

@@ -13,6 +13,18 @@ namespace DAaVE.Library
     public struct DataPoint
     {
         /// <summary>
+        /// Initializes a new instance of the DataPoint struct for a specific value observed
+        /// at a specific time.
+        /// </summary>
+        /// <param name="utcTimestamp">Time stamp of the observation (must be <see cref="DateTimeKind.Utc"/>).</param>
+        /// <param name="value">The data value observed.</param>
+        internal DataPoint(DateTime utcTimestamp, double value)
+        {
+            this.UtcTimestamp = utcTimestamp;
+            this.Value = value;
+        }
+
+        /// <summary>
         /// Gets or sets the time of the observation..
         /// </summary>
         /// <value>The time of the observation..</value>

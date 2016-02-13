@@ -25,8 +25,8 @@ namespace DAaVE.Library.DataCollection
         /// <summary>
         /// All threads polling data collectors.
         /// </summary>
-        private IDictionary<Type, DataCollectorPollerBackgroundWorker<TDataPointTypeEnum>> pollerThreads =
-            new Dictionary<Type, DataCollectorPollerBackgroundWorker<TDataPointTypeEnum>>();
+        private IDictionary<Type, DataCollectorObserver<TDataPointTypeEnum>> pollerThreads =
+            new Dictionary<Type, DataCollectorObserver<TDataPointTypeEnum>>();
 
         /// <summary>
         /// Whether a shut down is currently in progress. Can immediately be considered valid in any thread that has
@@ -42,21 +42,19 @@ namespace DAaVE.Library.DataCollection
         /// will be shutdown.
         /// </summary>
         /// <param name="assembly">
-        /// The assembly to discover <see cref="IDataCollector{TDataPointTypeEnum}"/> implementations within.
+        /// The assembly to discover <see cref="DataCollector{TDataPointTypeEnum}"/> implementations within.
         /// </param>
         /// <param name="dataPointFireHose">Data points will be submitted here.</param>
-        /// <param name="errorSink">Exceptional circumstances will be reported here.</param>
         public void StartCollectors(
             Assembly assembly, 
-            IDataPointFireHose<TDataPointTypeEnum> dataPointFireHose, 
-            IErrorSink errorSink)
+            IDataPointFireHose<TDataPointTypeEnum> dataPointFireHose)
         {
             if (assembly == null)
             {
                 throw new ArgumentNullException("assembly");
             }
 
-            IEnumerable<IDataCollector<TDataPointTypeEnum>> dataCollectors = InstantiateCollectors(assembly);
+            IEnumerable<DataCollector<TDataPointTypeEnum>> dataCollectors = InstantiateCollectors(assembly);
 
             lock (this.pollerThreads)
             {
@@ -65,27 +63,22 @@ namespace DAaVE.Library.DataCollection
                     throw new ObjectDisposedException("DataCollectionOrchestrator");
                 }
 
-                TaskFactory taskFactory = new TaskFactory();
-
-                foreach (IDataCollector<TDataPointTypeEnum> newDataCollector in dataCollectors)
+                foreach (DataCollector<TDataPointTypeEnum> newDataCollector in dataCollectors)
                 {
-                    DataCollectorAttribute dataCollectorAttribute =
-                        newDataCollector.GetType().GetCustomAttribute<DataCollectorAttribute>();
-
-                    DataCollectorPollerBackgroundWorker<TDataPointTypeEnum> existingPollerThread;
+                    DataCollectorObserver<TDataPointTypeEnum> existingPollerThread;
                     Type dataCollectorType = newDataCollector.GetType();
                     if (this.pollerThreads.TryGetValue(dataCollectorType, out existingPollerThread))
                     {
                         existingPollerThread.Dispose();
                     }
 
-                    var newPollerThread = new DataCollectorPollerBackgroundWorker<TDataPointTypeEnum>(
-                        taskFactory,
-                        newDataCollector,
-                        resultProcessor: results => dataPointFireHose.StoreRawData(results),
-                        pollEvery: dataCollectorAttribute.PollInterval,
-                        pollResultsMustBeProducedWithin: DataCollectionOrchestrator.MaximumPollDuration,
-                        errorSink: errorSink);
+                    Action<Observation<TDataPointTypeEnum>> resultProcessor = observation =>
+                    {
+                        dataPointFireHose.StoreRawData(
+                            observation.Data.ToDictionary(datum => datum.Key, datum => new DataPoint(observation.DateTimeUtc, datum.Value)));
+                    };
+
+                    var newPollerThread = new DataCollectorObserver<TDataPointTypeEnum>(newDataCollector, resultProcessor);
 
                     this.pollerThreads.Add(dataCollectorType, newPollerThread);
                 }
@@ -101,7 +94,7 @@ namespace DAaVE.Library.DataCollection
 
             lock (this.pollerThreads)
             {
-                foreach (DataCollectorPollerBackgroundWorker<TDataPointTypeEnum> pollingThread in this.pollerThreads.Select(_ => _.Value))
+                foreach (DataCollectorObserver<TDataPointTypeEnum> pollingThread in this.pollerThreads.Select(_ => _.Value))
                 {
                     pollingThread.Dispose();
                 }
@@ -113,15 +106,15 @@ namespace DAaVE.Library.DataCollection
         /// <see cref="DataCollectorAttribute"/> attribute using default constructors (that must exist).
         /// </summary>
         /// <param name="assembly">
-        /// The assembly to discover <see cref="IDataCollector{TDataPointTypeEnum}"/> implementations within.
+        /// The assembly to discover <see cref="DataCollector{TDataPointTypeEnum}"/> implementations within.
         /// </param>
         /// <returns>The instantiated objects.</returns>
-        private static IEnumerable<IDataCollector<TDataPointTypeEnum>> InstantiateCollectors(Assembly assembly)
+        private static IEnumerable<DataCollector<TDataPointTypeEnum>> InstantiateCollectors(Assembly assembly)
         {
             return assembly.GetTypes()
                 .Where(t => t.CustomAttributes.Any(a => a.AttributeType.Equals(typeof(DataCollectorAttribute))))
                 .Select(t => Activator.CreateInstance(t))
-                .Select(o => o as IDataCollector<TDataPointTypeEnum>)
+                .Select(o => o as DataCollector<TDataPointTypeEnum>)
                 .Where(c => c != null);
         }
     }
