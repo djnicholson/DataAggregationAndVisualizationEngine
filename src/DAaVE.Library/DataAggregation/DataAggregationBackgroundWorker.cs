@@ -48,6 +48,8 @@ namespace DAaVE.Library.DataAggregation
             {
                 try
                 {
+                    Task uploadInProgress = null;
+
                     while (true)
                     {
                         ContiguousRawDataPointCollection pageOfUnaggregatedData;
@@ -67,25 +69,34 @@ namespace DAaVE.Library.DataAggregation
 
                         IEnumerable<AggregatedDataPoint> aggregatedData = aggregator.Aggregate(pageOfUnaggregatedData);
 
-                        // TODO: Let this go async (it will be mostly network IO to Azure) and get started on the (probably CPU-heavy)
-                        // work of doing the next aggregation
-                        pageOfUnaggregatedData.ProvideAggregatedData(aggregatedData).Wait();
+                        if (uploadInProgress != null)
+                        {
+                            // Aggregation (CPU heavy) and upload (IO heavy) are allowed to happen in parallel, but only one
+                            // of each at a time.
+                            uploadInProgress.Wait();
+                            consecutiveErrorCount = 0;
+                        }
 
-                        consecutiveErrorCount = 0;
+                        uploadInProgress = pageOfUnaggregatedData.ProvideAggregatedData(aggregatedData);
                     }
                 }
                 catch (Exception e)
                 {
-                    errorSink.OnError("Exception when aggregating page of data of type: " + type + "@" + continuationTokenCurrent, e);
+                    string activityDescription = "aggregating page of data of type: " + type + "@" + continuationTokenCurrent;
+
+                    errorSink.OnError("Exception when " + activityDescription, e);
 
                     consecutiveErrorCount++;
                     if (consecutiveErrorCount > 20)
                     {
-                        errorSink.OnError("Too many consecutive errors; re-throwing", e);
+                        errorSink.OnError("Too many consecutive errors when " + activityDescription + "; re-throwing", e);
                         throw;
                     }
 
-                    shutdownStart.Wait(DataAggregationOrchestrator.SleepDurationOnError);
+                    if (shutdownStart.Wait(DataAggregationOrchestrator.SleepDurationOnError))
+                    {
+                        return;
+                    }
                 }
             });
         }
