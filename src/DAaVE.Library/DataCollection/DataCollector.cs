@@ -26,9 +26,16 @@ namespace DAaVE.Library.DataCollection
         /// </summary>
         protected DataCollector()
         {
-            this.Observations = new ConcurrentQueue<Observation<TDataPointTypeEnum>>();
-            this.ObservationsNonEmpty = new ManualResetEventSlim(false);
-            this.isDisposed = false;
+            try
+            {
+                this.ObservationsNonEmpty = new ManualResetEventSlim(false);
+                this.Observations = new ConcurrentQueue<Observation<TDataPointTypeEnum>>();
+                this.isDisposed = false;
+            }
+            finally
+            {
+                // if there was an exception, need to dispose this.ObservationsNonEmpty
+            }
         }
 
         /// <summary>
