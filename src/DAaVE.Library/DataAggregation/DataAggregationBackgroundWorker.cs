@@ -44,7 +44,7 @@ namespace DAaVE.Library.DataAggregation
 
             int consecutiveErrorCount = 0;
 
-            Task.Run(() =>
+            Task.Run(async () =>
             {
                 try
                 {
@@ -55,7 +55,7 @@ namespace DAaVE.Library.DataAggregation
                         ContiguousRawDataPointCollection pageOfUnaggregatedData;
                         do
                         {
-                            pageOfUnaggregatedData = pager.GetPageOfRawData(type);
+                            pageOfUnaggregatedData = await pager.GetPageOfRawData(type);
 
                             if (pageOfUnaggregatedData.Count() == 0)
                             {

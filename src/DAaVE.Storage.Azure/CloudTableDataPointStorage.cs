@@ -3,6 +3,20 @@
 // </copyright>
 // <summary>See class header.</summary>
 
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "Microsoft.Design",
+    "CA1031:DoNotCatchGeneralExceptionTypes",
+    Scope = "member",
+    Target = "DAaVE.Storage.Azure.CloudTableDataPointStorage`1+<GetPageOfRawData>d__6.#MoveNext()",
+    Justification = "The IL generated when using the await operator does re-throw exceptions from the task, but is too complex for FXCop to be able to determine this.")]
+
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "Microsoft.Design",
+    "CA1031:DoNotCatchGeneralExceptionTypes",
+    Scope = "member",
+    Target = "DAaVE.Storage.Azure.CloudTableDataPointStorage`1+<RebuildRawDataPageBuffersForType>d__9.#MoveNext()",
+    Justification = "The IL generated when using the await operator does re-throw exceptions from the task, but is too complex for FXCop to be able to determine this.")]
+
 namespace DAaVE.Storage.Azure
 {
     using System;
@@ -108,7 +122,7 @@ namespace DAaVE.Storage.Azure
         }
 
         /// <inheritdoc/>
-        public ContiguousRawDataPointCollection GetPageOfRawData(TDataPointTypeEnum type)
+        public async Task<ContiguousRawDataPointCollection> GetPageOfRawData(TDataPointTypeEnum type)
         {
             this.bufferedRawDataPartitionsByType.AddOrUpdate(
                 key: type,
@@ -118,7 +132,7 @@ namespace DAaVE.Storage.Azure
             ConcurrentDictionary<string, IOrderedEnumerable<DataPoint>> bufferedPartitions = null;
             if (!this.bufferedRawDataPartitionsByType.TryGetValue(type, out bufferedPartitions) || !bufferedPartitions.Any())
             {
-                this.RebuildRawDataPageBuffersForType(type);
+                await this.RebuildRawDataPageBuffersForType(type);
 
                 if (!this.bufferedRawDataPartitionsByType.TryGetValue(type, out bufferedPartitions) || !bufferedPartitions.Any())
                 {
@@ -168,22 +182,42 @@ namespace DAaVE.Storage.Azure
 
             return batches;
         }
-
+        
         /// <summary>
-        /// Converts context stored by user back into a string.
+        /// Creates a query that will retrieve all points in the supplied partition that were observed recently
+        /// enough to be aggregated.
         /// </summary>
-        /// <param name="pagerContext">Context from user.</param>
-        /// <returns>Context as a string (containing a partition key).</returns>
-        private static string GetPartitionKey(object pagerContext)
+        /// <param name="partition">The partition to query.</param>
+        /// <returns>A table query that can be used to execute a query on a table.</returns>
+        private static TableQuery<DataPointCloudTableEntity<TDataPointTypeEnum>> CreateTableQueuery(string partition)
         {
-            return pagerContext as string;
+            string partitionFilter = TableQuery.GenerateFilterCondition(
+                "PartitionKey",
+                QueryComparisons.Equal,
+                partition);
+
+            string recencyFilter = TableQuery.GenerateFilterConditionForDate(
+                "CollectionTimeUtc",
+                QueryComparisons.GreaterThan,
+                DateTimeOffset.UtcNow.Subtract(CloudTableDataPointStorage.ProcessingDelay));
+
+            TableQuery<DataPointCloudTableEntity<TDataPointTypeEnum>> tableQuery =
+                (new TableQuery<DataPointCloudTableEntity<TDataPointTypeEnum>>())
+                .Where(partitionFilter)
+                .Where(recencyFilter);
+            return tableQuery;
         }
 
         /// <summary>
         /// Queries for raw data currently eligible for aggregation.
         /// </summary>
         /// <param name="type">The type of data point to query.</param>
-        private void RebuildRawDataPageBuffersForType(TDataPointTypeEnum type)
+        /// <returns>
+        /// A running task that upon successful completion guarantees that if any raw data is
+        /// available for aggregation, it will have been placed in 
+        /// <see cref="bufferedRawDataPartitionsByType"/>.
+        /// </returns>
+        private async Task RebuildRawDataPageBuffersForType(TDataPointTypeEnum type)
         {
             DateTime utcNow = DateTime.UtcNow;
             IEnumerable<string> partitions = DataPointCloudTableEntity<TDataPointTypeEnum>.GetPartitions(
@@ -193,18 +227,26 @@ namespace DAaVE.Storage.Azure
 
             foreach (string partition in partitions)
             {
-                var tableQuery = new TableQuery<DataPointCloudTableEntity<TDataPointTypeEnum>>();
+                TableQuery<DataPointCloudTableEntity<TDataPointTypeEnum>> tableQuery = 
+                    CreateTableQueuery(partition);
 
-                //// TODO: Async IO for Azure HTTP requests here.
-
-                IEnumerable<DataPoint> pointsInPartition = this.firehoseTable
-                    .ExecuteQuery(tableQuery.Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partition)))
-                    .Where(ce => (ce.CollectionTimeUtc + CloudTableDataPointStorage.ProcessingDelay) < utcNow)
-                    .Select(ce => new DataPoint() { UtcTimestamp = ce.CollectionTimeUtc, Value = ce.Value });
-
-                if (pointsInPartition.Any())
+                IList<IEnumerable<DataPoint>> allSegments = new List<IEnumerable<DataPoint>>();
+                TableContinuationToken continuationToken = null;
+                do
                 {
-                    this.bufferedRawDataPartitionsByType[type][partition] = pointsInPartition.OrderBy(dp => dp.UtcTimestamp);
+                    TableQuerySegment<DataPointCloudTableEntity<TDataPointTypeEnum>> segment =
+                        await this.firehoseTable.ExecuteQuerySegmentedAsync(tableQuery, continuationToken);
+
+                    allSegments.Add(segment.Results.Select(e => new DataPoint() { UtcTimestamp = e.CollectionTimeUtc, Value = e.Value }));
+
+                    continuationToken = segment.ContinuationToken;
+                }
+                while (continuationToken != null);
+
+                if (allSegments.Any())
+                {
+                    IEnumerable<DataPoint> allPoints = allSegments.Aggregate((a, b) => a.Concat(b));
+                    this.bufferedRawDataPartitionsByType[type][partition] = allPoints.OrderBy(dp => dp.UtcTimestamp);
                 }
             }
         }

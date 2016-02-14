@@ -6,6 +6,7 @@
 namespace DAaVE.Library.Storage
 {
     using System;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Exposes a contiguous stream of raw collected data points as a sequence of pages.
@@ -21,8 +22,9 @@ namespace DAaVE.Library.Storage
         /// </summary>
         /// <param name="type">The type of data point to query.</param>
         /// <returns>
-        /// A set of raw data points for aggregation. Non-null, but possibly empty.
+        /// A running task that upon successful completion will provide a set of raw data
+        /// points for aggregation (always non-null, but possibly empty).
         /// </returns>
-        ContiguousRawDataPointCollection GetPageOfRawData(TDataPointTypeEnum type);
+        Task<ContiguousRawDataPointCollection> GetPageOfRawData(TDataPointTypeEnum type);
     }
 }
