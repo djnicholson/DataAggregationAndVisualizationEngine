@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\common.props" />
   <PropertyGroup>
     <ProjectGuid>{3EF4D74D-E5D4-4EE7-A2F6-C9054808DCE4}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -9,6 +8,7 @@
     <AssemblyName>DAaVE.Storage.Azure</AssemblyName>
     <DocumentationFile>$(OutputPath)$(AssemblyName).XML</DocumentationFile>
   </PropertyGroup>
+  <Import Project="..\common.props" />
   <ItemGroup>
     <Reference Include="Microsoft.Azure.KeyVault.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Azure.KeyVault.Core.1.0.0\lib\net40\Microsoft.Azure.KeyVault.Core.dll</HintPath>
