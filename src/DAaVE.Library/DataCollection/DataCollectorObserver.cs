@@ -44,7 +44,7 @@ namespace DAaVE.Library.DataCollection
                     while (!dataCollector.Observations.TryDequeue(out observation))
                     {
                         Task.WaitAny(
-                            new[] { Task.Run(() => dataCollector.ObservationsNonEmpty.Wait()) },
+                            new[] { dataCollector.Wait() },
                             this.cancellationTokenSource.Token);
                     }
 

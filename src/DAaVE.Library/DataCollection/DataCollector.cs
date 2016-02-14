@@ -8,6 +8,7 @@ namespace DAaVE.Library.DataCollection
     using System;
     using System.Collections.Concurrent;
     using System.Threading;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Capable of providing recent raw values for one or more data point types.
@@ -22,20 +23,18 @@ namespace DAaVE.Library.DataCollection
         private bool isDisposed;
 
         /// <summary>
+        /// Used to signal that a new observation has been added to <see cref="Observations"/>.
+        /// </summary>
+        private ManualResetEventSlim observationAdded;
+
+        /// <summary>
         /// Initializes a new instance of the DataCollector class with an empty observation queue.
         /// </summary>
         protected DataCollector()
         {
-            try
-            {
-                this.ObservationsNonEmpty = new ManualResetEventSlim(false);
-                this.Observations = new ConcurrentQueue<Observation<TDataPointTypeEnum>>();
-                this.isDisposed = false;
-            }
-            finally
-            {
-                // if there was an exception, need to dispose this.ObservationsNonEmpty
-            }
+            this.observationAdded = new ManualResetEventSlim();
+            this.Observations = new ConcurrentQueue<Observation<TDataPointTypeEnum>>();
+            this.isDisposed = false;
         }
 
         /// <summary>
@@ -60,21 +59,29 @@ namespace DAaVE.Library.DataCollection
         }
 
         /// <summary>
-        /// Gets a value indicating whether <see cref="Observations"/> is most likely non-empty.
-        /// </summary>
-        internal ManualResetEventSlim ObservationsNonEmpty
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
         /// Delegates to <see cref="Dispose(bool)"/> in disposing mode.
         /// </summary>
         public void Dispose()
         {
             this.Dispose(isDisposing: true);
             GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Wait for a new observation to be added to <see cref="Observations"/>.
+        /// </summary>
+        /// <returns>
+        /// A running task whose completion is an indication that an observation was recently 
+        /// added to <see cref="Observations"/>
+        /// </returns>
+        internal Task Wait()
+        {
+            this.observationAdded.Reset();
+
+            return Task.Run(() =>
+            {
+                this.observationAdded.Wait();
+            });
         }
 
         /// <summary>
@@ -94,7 +101,7 @@ namespace DAaVE.Library.DataCollection
             if (!this.isDisposed)
             {
                 this.Observations.Enqueue(observation);
-                this.ObservationsNonEmpty.Set();
+                this.observationAdded.Set();
             }
         }
 
@@ -116,7 +123,7 @@ namespace DAaVE.Library.DataCollection
             if (isDisposing)
             {
                 this.CeaseObservations();
-                this.ObservationsNonEmpty.Dispose();
+                this.observationAdded.Dispose();
             }
         }
     }

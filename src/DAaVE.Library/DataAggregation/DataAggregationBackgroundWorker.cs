@@ -93,7 +93,7 @@ namespace DAaVE.Library.DataAggregation
                         throw;
                     }
 
-                    if (shutdownStart.Wait(DataAggregationOrchestrator.SleepDurationOnError))
+                    if (this.shutdownStart.Wait(DataAggregationOrchestrator.SleepDurationOnError))
                     {
                         return;
                     }
