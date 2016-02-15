@@ -15,21 +15,6 @@
     <CodeAnalysisIgnoreGeneratedCode>false</CodeAnalysisIgnoreGeneratedCode>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <PropertyGroup>
-    <SignAssembly>true</SignAssembly>
-    <DelaySign>false</DelaySign>
-    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)dummy-$(Configuration).snk</AssemblyOriginatorKeyFile>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PreBuildEvent Condition="!Exists('$(AssemblyOriginatorKeyFile)') OR !Exists('$(AssemblyOriginatorKeyFile).pub')">
-      $(MSBuildThisFileDirectory)\..\ext\NETFXTools\4.6.1\sn.exe -q -k $(AssemblyOriginatorKeyFile)
-      $(MSBuildThisFileDirectory)\..\ext\NETFXTools\4.6.1\sn.exe -q -p $(AssemblyOriginatorKeyFile) $(AssemblyOriginatorKeyFile).pub
-    </PreBuildEvent>
-    <PostBuildEvent>
-      echo Local dummy key (from $(AssemblyOriginatorKeyFile)): 
-      $(MSBuildThisFileDirectory)\..\ext\NETFXTools\4.6.1\sn.exe -q -tp $(AssemblyOriginatorKeyFile).pub
-    </PostBuildEvent>
-  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -42,6 +27,20 @@
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+    <DelaySign>false</DelaySign>
+    <AssemblyOriginatorKeyFile>$(MSBuildProjectDirectory)\$(MSBuildProjectName).dummy.snk</AssemblyOriginatorKeyFile>
+    <PreBuildEvent Condition="!Exists('$(AssemblyOriginatorKeyFile)') OR !Exists('$(AssemblyOriginatorKeyFile).pub')">
+      mkdir $(OutputPath)
+      $(MSBuildThisFileDirectory)\..\ext\NETFXTools\4.6.1\sn.exe -q -k $(AssemblyOriginatorKeyFile)
+      $(MSBuildThisFileDirectory)\..\ext\NETFXTools\4.6.1\sn.exe -q -p $(AssemblyOriginatorKeyFile) $(AssemblyOriginatorKeyFile).pub
+    </PreBuildEvent>
+    <PostBuildEvent>
+      echo Local dummy key (from $(AssemblyOriginatorKeyFile)): 
+      $(MSBuildThisFileDirectory)\..\ext\NETFXTools\4.6.1\sn.exe -q -tp $(AssemblyOriginatorKeyFile).pub
+    </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <DocumentationFile>$(OutputPath)$(AssemblyName).XML</DocumentationFile>
