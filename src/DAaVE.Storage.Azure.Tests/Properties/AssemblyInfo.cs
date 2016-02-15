@@ -5,13 +5,12 @@
 
 using System;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Data Aggregation and Visualization Engine Azure Storage Support")]
+[assembly: AssemblyTitle("Data Aggregation and Visualization Engine Azure Storage Support Unit Tests")]
 [assembly: AssemblyCompany("David Nicholson")]
 [assembly: AssemblyProduct("Data Aggregation and Visualization Engine (DAaVE)")]
 [assembly: AssemblyCopyright("Copyright ©  2015")]
@@ -22,7 +21,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("3ef4d74d-e5d4-4ee7-a2f6-c9054808dce4")]
+[assembly: Guid("bf616e8b-4abc-474a-9542-2f6c0082d0db")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -38,5 +37,3 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion("1.0.0.0")]
 
 [assembly: CLSCompliant(true)]
-
-[assembly: InternalsVisibleTo("DAaVE.Storage.Azure.Tests, PublicKey=00000000000000000400000000000000")]

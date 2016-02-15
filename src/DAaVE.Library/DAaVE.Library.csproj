@@ -6,7 +6,6 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DAaVE.Library</RootNamespace>
     <AssemblyName>DAaVE.Library</AssemblyName>
-    <DocumentationFile>$(OutputPath)$(AssemblyName).XML</DocumentationFile>
   </PropertyGroup>
   <Import Project="..\common.props" />
   <ItemGroup>
