@@ -14,9 +14,11 @@
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <CodeAnalysisIgnoreGeneratedCode>false</CodeAnalysisIgnoreGeneratedCode>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup>
     <SignAssembly>true</SignAssembly>
     <DelaySign>false</DelaySign>
-    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)dummy.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)dummy-$(Configuration).snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent Condition="!Exists('$(AssemblyOriginatorKeyFile)') OR !Exists('$(AssemblyOriginatorKeyFile).pub')">
@@ -24,7 +26,7 @@
       $(MSBuildThisFileDirectory)\..\ext\NETFXTools\4.6.1\sn.exe -q -p $(AssemblyOriginatorKeyFile) $(AssemblyOriginatorKeyFile).pub
     </PreBuildEvent>
     <PostBuildEvent>
-      echo Public key for local dummy.snk: 
+      echo Local dummy key (from $(AssemblyOriginatorKeyFile)): 
       $(MSBuildThisFileDirectory)\..\ext\NETFXTools\4.6.1\sn.exe -q -tp $(AssemblyOriginatorKeyFile).pub
     </PostBuildEvent>
   </PropertyGroup>
