@@ -3,6 +3,13 @@
 // </copyright>
 // <summary>See class header.</summary>
 
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "Microsoft.Design",
+    "CA1031:DoNotCatchGeneralExceptionTypes",
+    Scope = "member",
+    Target = "DAaVE.Library.DataAggregation.DataAggregationBackgroundWorker`1+<>c__DisplayClass1_1+<<-ctor>b__0>d.#MoveNext()",
+    Justification = "After a contiguous sequence of exceptional aggregations, an exception will be re-thrown.")]
+
 namespace DAaVE.Library.DataAggregation
 {
     using System;
