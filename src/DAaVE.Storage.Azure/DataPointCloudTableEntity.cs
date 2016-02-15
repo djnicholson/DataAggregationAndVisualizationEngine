@@ -22,16 +22,15 @@ namespace DAaVE.Storage.Azure
         where TDataPointTypeEnum : struct, IComparable, IFormattable
     {
         /// <summary>
-        /// The amount of minutes worth of raw data in each partition of the Azure Table. Aggregations
-        /// cannot be performed on any window wider than this.
-        /// TODO: Allow customization by collector/aggregator implementers.
-        /// </summary>
-        public const int MinutesOfRawDataPerFireHosePage = 5;
-
-        /// <summary>
         /// The schema version currently in use (increment whenever making changes to the public surface area of this class).
         /// </summary>
         private const int RuntimeVersion = 1;
+
+        /// <summary>
+        /// For resolving properties of the various data point types being stored.
+        /// </summary>
+        private static readonly DataPointTypeAttributes<TDataPointTypeEnum> DataPointTypeAttributes =
+            new DataPointTypeAttributes<TDataPointTypeEnum>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataPointCloudTableEntity{TDataPointTypeEnum}"/> class.
@@ -102,7 +101,7 @@ namespace DAaVE.Storage.Azure
             while (current < endUtc)
             {
                 yield return GeneratePartitionKey(type, current);
-                current = current.AddMinutes(MinutesOfRawDataPerFireHosePage);
+                current = current.AddMinutes(GetMinutesOfRawDataPerFireHosePage(type));
             }
         }
 
@@ -126,8 +125,19 @@ namespace DAaVE.Storage.Azure
                 utcTimestamp.Month,
                 utcTimestamp.Day,
                 utcTimestamp.Hour,
-                utcTimestamp.Minute / MinutesOfRawDataPerFireHosePage,
+                utcTimestamp.Minute / GetMinutesOfRawDataPerFireHosePage(type),
                 RuntimeVersion);
+        }
+
+        /// <summary>
+        /// Determine how many minutes worth of raw data points should be placed in a single Azure Table Storage
+        /// partition for a certain type of data.
+        /// </summary>
+        /// <param name="type">The type of data.</param>
+        /// <returns>The amount of data points to place in each page (1-minute resolution).</returns>
+        private static uint GetMinutesOfRawDataPerFireHosePage(TDataPointTypeEnum type)
+        {
+            return DataPointTypeAttributes.GetAggregationInputWindowSizeInMinutes(type);
         }
     }
 }
