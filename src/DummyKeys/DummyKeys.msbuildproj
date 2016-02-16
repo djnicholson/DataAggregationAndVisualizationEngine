@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Project 
+  ToolsVersion="14.0" 
+  DefaultTargets="GenerateKeys" 
+  xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  
+  <PropertyGroup>
+    <ProjectGuid>{957CF5D5-D539-413F-9B73-ABD291DC1231}</ProjectGuid>
+    <OutputPath>keys</OutputPath>
+    <GenerationScript>generateKeys.cmd</GenerationScript>
+  </PropertyGroup>
+  
+  <Target Name="GenerateKeys" Condition="!Exists('$(OutputPath)')">
+    <Message Text="Generating a keypair for signing local private builds" Importance="high"/>
+    <Exec Command="$(GenerationScript) $(OutputPath) $(MSBuildThisFileDirectory)..\..\ext\NETFXTools\4.6.1\sn.exe" />
+  </Target>
+    
+  <Target Name="RemoveKeys" Condition="Exists('$(OutputPath)')">
+    <Message Text="Deleting keypair (and associated files) being used for signing local private builds" Importance="high"/>
+    <CreateItem Include="$(OutputPath)\*">
+        <Output TaskParameter="Include" ItemName="GeneratedFiles"/>
+    </CreateItem>
+    <Delete Files="@(GeneratedFiles)"/>
+    <RemoveDir Directories="$(OutputPath)"/>
+  </Target>
+  
+</Project>
