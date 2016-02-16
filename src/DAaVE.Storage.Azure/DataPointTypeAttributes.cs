@@ -18,10 +18,12 @@ namespace DAaVE.Storage.Azure
         where TDataPointTypeEnum : struct, IComparable, IFormattable
     {
         /// <summary>
-        /// Gets the minimum size of the input sent into an aggregator. The lower this value, the 
-        /// faster aggregated data will be available. A higher value provides flexibility to aggregate
-        /// over larger windows of time, therefore providing an efficient way to present a data
-        /// series over a very long time.
+        /// Gets the minimum size of the input sent into an aggregator when requesting a complete
+        /// aggregation (less points may be offered, but the aggregator wont be obligated to generate
+        /// output).  A higher value provides flexibility to aggregate over larger windows of time 
+        /// (providing an efficient way to present a data series over a very long time) but can lead
+        /// to inefficient aggregation for data types that are observed frequently (as many raw 
+        /// observations will be crammed into a single Azure Table Storage partition).
         /// </summary>
         /// <param name="dataPointType">The type of data point.</param>
         /// <returns>Minimum amount of raw data to provide as input to an aggregator.</returns>

@@ -38,5 +38,3 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion("1.0.0.0")]
 
 [assembly: CLSCompliant(true)]
-
-[assembly: InternalsVisibleTo("DAaVE.Storage.Azure.Tests, PublicKey=00000000000000000400000000000000")]

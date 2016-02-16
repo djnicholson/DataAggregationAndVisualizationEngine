@@ -8,12 +8,19 @@
   <PropertyGroup>
     <ProjectGuid>{957CF5D5-D539-413F-9B73-ABD291DC1231}</ProjectGuid>
     <OutputPath>keys</OutputPath>
-    <GenerationScript>generateKeys.cmd</GenerationScript>
+    <KeyGenerationScript>generateKeys.cmd</KeyGenerationScript>
+    <InternalsVisibleToGenerationScript>generateInternalsVisibleTo.cmd</InternalsVisibleToGenerationScript>
+    <InternalsVisibleToFile>dummy.snk.InternalsVisibleTo.$(TestAssemblyName).generated.cs</InternalsVisibleToFile>
   </PropertyGroup>
   
   <Target Name="GenerateKeys" Condition="!Exists('$(OutputPath)')">
     <Message Text="Generating a keypair for signing local private builds" Importance="high"/>
-    <Exec Command="$(GenerationScript) $(OutputPath) $(MSBuildThisFileDirectory)..\..\ext\NETFXTools\4.6.1\sn.exe" />
+    <Exec Command="$(KeyGenerationScript) $(OutputPath) $(MSBuildThisFileDirectory)..\..\ext\NETFXTools\4.6.1\sn.exe" />
+  </Target>
+  
+  <Target Name="GenerateInternalsVisibleTo" Condition="!Exists('$(InternalsVisibleToFile)')">
+    <Message Text="Generating $(InternalsVisibleToFile)" Importance="high"/>
+    <Exec Command="$(InternalsVisibleToGenerationScript) $(TestAssemblyName) $(OutputPath)\dummy.snk.details.txt $(OutputPath)\$(InternalsVisibleToFile)" />
   </Target>
     
   <Target Name="RemoveKeys" Condition="Exists('$(OutputPath)')">
