@@ -23,6 +23,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DaAVE.Library\DAaVE.Library.csproj">
+      <Project>{ab831a3a-1ca5-4d62-9fc6-d54c3f7679a1}</Project>
+      <Name>DAaVE.Library</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DAaVE.Storage.Azure\DAaVE.Storage.Azure.csproj">
       <Project>{3ef4d74d-e5d4-4ee7-a2f6-c9054808dce4}</Project>
       <Name>DAaVE.Storage.Azure</Name>

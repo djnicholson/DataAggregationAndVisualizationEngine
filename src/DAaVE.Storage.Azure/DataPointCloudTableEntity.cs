@@ -135,7 +135,7 @@ namespace DAaVE.Storage.Azure
         /// </summary>
         /// <param name="type">The type of data.</param>
         /// <returns>The amount of data points to place in each page (1-minute resolution).</returns>
-        private static uint GetMinutesOfRawDataPerFireHosePage(TDataPointTypeEnum type)
+        private static double GetMinutesOfRawDataPerFireHosePage(TDataPointTypeEnum type)
         {
             return DataPointTypeAttributes.GetAggregationInputWindowSizeInMinutes(type);
         }
