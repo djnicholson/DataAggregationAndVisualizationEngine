@@ -25,6 +25,7 @@
     <Compile Include="DataAggregation\DataAggregationOrchestratorStatic.cs" />
     <Compile Include="DataAggregation\DataAggregationBackgroundWorker.cs" />
     <Compile Include="DataAggregation\IDataPointAggregator.cs" />
+    <Compile Include="DataCollection\ExpectedObservationRateAttribute.cs" />
     <Compile Include="DataCollection\DataCollectionOrchestrator.cs" />
     <Compile Include="DataCollection\DataCollectionOrchestratorStatic.cs" />
     <Compile Include="DataCollection\DataCollectorObserver.cs" />
