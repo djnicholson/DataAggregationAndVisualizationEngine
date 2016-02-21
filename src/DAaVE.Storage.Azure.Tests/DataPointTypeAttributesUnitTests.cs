@@ -29,17 +29,21 @@ namespace DAaVE.Storage.Azure.Tests
             /// Observed once per day.
             /// </summary>
             [ExpectedObservationRate(InHours = 24.0)]
+            ////[AggregateWith(typeof(Foo))]
             MinutesOfDaylight = 0,
 
             /// <summary>
             /// Amount of web requests seen in some fixed interval.
             /// </summary>
             [ExpectedObservationRate(InSeconds = 5.0)]
+            ////[AggregateWith(typeof(Bar))]
+            ////[AggregateWith(typeof(Baz))]
             HttpRequests = 1,
 
             /// <summary>
             /// What is the current 'ask' for BTC? Observed very frequently.
             /// </summary>
+            ////[AggregateWith(typeof(Baz))]
             [ExpectedObservationRate(InMinutes = 0.001)]
             PriceOfBitcoin = 2,
         }

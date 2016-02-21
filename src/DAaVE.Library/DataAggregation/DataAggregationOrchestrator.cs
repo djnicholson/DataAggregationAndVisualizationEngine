@@ -41,6 +41,8 @@ namespace DAaVE.Library.DataAggregation
         {
             foreach (TDataPointTypeEnum dataType in Enum.GetValues(typeof(TDataPointTypeEnum)).Cast<TDataPointTypeEnum>())
             {
+                // TODO: Filter by: AggregateWithAttribute
+
                 var newThread = new DataAggregationBackgroundWorker<TDataPointTypeEnum>(
                     dataType,
                     aggregator,
