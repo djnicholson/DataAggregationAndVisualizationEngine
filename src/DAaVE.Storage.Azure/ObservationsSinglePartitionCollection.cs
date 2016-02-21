@@ -53,6 +53,11 @@ namespace DAaVE.Storage.Azure
         private readonly CloudTable aggregationTable;
 
         /// <summary>
+        /// Whether this page is currently considered 'incomplete' and is guaranteed be re-presented later.
+        /// </summary>
+        private readonly bool isPartial;
+
+        /// <summary>
         /// Code that can be invoked whenever a successful aggregation has happened, and the results have been committed to
         /// storage. Can be invoked multiple times for the same parameters, must be invoked at least once per partition that
         /// is successfully aggregated.
@@ -69,21 +74,33 @@ namespace DAaVE.Storage.Azure
         /// Code that will be invoked whenever a successful aggregation has happened, and the results have been committed to
         /// storage. May be invoked multiple times for the same partition.
         /// </param>
-        /// <param name="rawDataPoints">
+        /// <param name="pageOfObservations">
         /// All raw data points of type <paramref name="seriesDataPointType"/> in the <paramref name="firehosePartitionKey"/> partition of 
         /// the fire hose table. In ascending time order.
         /// </param>
+        /// <param name="isPartial">Whether this page is currently considered 'incomplete' and is guaranteed be re-presented later.</param>
         public ObservationsSinglePartitionCollection(
             TDataPointTypeEnum seriesDataPointType,
             string firehosePartitionKey,
             CloudTable aggregationTable,
             Action onAggregationSuccess,
-            IOrderedEnumerable<DataPointObservation> rawDataPoints) : base(rawDataPoints)
+            IOrderedEnumerable<DataPointObservation> pageOfObservations,
+            bool isPartial) : base(pageOfObservations)
         {
             this.seriesDataPointType = seriesDataPointType;
             this.firehosePartitionKey = firehosePartitionKey;
             this.aggregationTable = aggregationTable;
             this.onAggregationSuccess = onAggregationSuccess;
+            this.isPartial = isPartial;
+        }
+
+        /// <inheritdoc/>
+        public override bool IsPartial
+        {
+            get
+            {
+                return this.isPartial;
+            }
         }
 
         /// <inheritdoc/>

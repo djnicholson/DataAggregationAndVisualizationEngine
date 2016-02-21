@@ -46,6 +46,17 @@ namespace DAaVE.Library.Storage
         }
 
         /// <summary>
+        /// Gets a value indicating whether the page of data that these observations originated from 
+        /// is considered 'incomplete'; that is to say that the page will be re-aggregated at a later 
+        /// time, possibly in a more complete form.
+        /// </summary>
+        /// <value>Whether these values are considered an incomplete page.</value>
+        public abstract bool IsPartial
+        {
+            get;
+        }
+
+        /// <summary>
         /// Facilitates enumeration of all data points in ascending order by observation time.
         /// </summary>
         /// <returns>An enumerator of raw data points.</returns>

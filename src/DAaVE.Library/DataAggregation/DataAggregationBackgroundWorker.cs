@@ -62,7 +62,7 @@ namespace DAaVE.Library.DataAggregation
                         ConsecutiveDataPointObservationsCollection pageOfUnaggregatedData;
                         do
                         {
-                            pageOfUnaggregatedData = await pager.GetPageOfRawData(type);
+                            pageOfUnaggregatedData = await pager.GetPageOfObservations(type);
 
                             if (pageOfUnaggregatedData.Count() == 0)
                             {
@@ -76,15 +76,18 @@ namespace DAaVE.Library.DataAggregation
 
                         IEnumerable<AggregatedDataPoint> aggregatedData = aggregator.Aggregate(pageOfUnaggregatedData);
 
-                        if (uploadInProgress != null)
+                        if (aggregatedData.Any())
                         {
-                            // Aggregation (CPU heavy) and upload (IO heavy) are allowed to happen in parallel, but only one
-                            // of each at a time.
-                            uploadInProgress.Wait();
-                            consecutiveErrorCount = 0;
-                        }
+                            if (uploadInProgress != null)
+                            {
+                                // Aggregation (CPU heavy) and upload (IO heavy) are allowed to happen in parallel, but only one
+                                // of each at a time.
+                                uploadInProgress.Wait();
+                                consecutiveErrorCount = 0;
+                            }
 
-                        uploadInProgress = pageOfUnaggregatedData.ProvideAggregatedData(aggregatedData);
+                            uploadInProgress = pageOfUnaggregatedData.ProvideAggregatedData(aggregatedData);
+                        }
                     }
                 }
                 catch (Exception e)

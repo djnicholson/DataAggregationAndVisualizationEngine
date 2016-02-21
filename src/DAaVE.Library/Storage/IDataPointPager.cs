@@ -16,15 +16,17 @@ namespace DAaVE.Library.Storage
         where TDataPointTypeEnum : struct, IComparable, IFormattable
     {
         /// <summary>
-        /// Get the next page of raw values collected for a specific type of data point.
-        /// Implementations should return as expediently as possible (even if that means 
-        /// returning an empty data set).
+        /// Get the next page of raw Observations of a specific type of data point.
+        /// Implementations can return an empty or incomplete page. Implementations 
+        /// should favor returning a partial page over blocking on expected future
+        /// observations.
         /// </summary>
         /// <param name="type">The type of data point to query.</param>
         /// <returns>
-        /// A running task that upon successful completion will provide a set of raw data
-        /// points for aggregation (always non-null, but possibly empty).
+        /// A running task that upon successful completion will provide a set of data
+        /// point observations for aggregation (always non-null, but possibly empty).
         /// </returns>
-        Task<ConsecutiveDataPointObservationsCollection> GetPageOfRawData(TDataPointTypeEnum type);
+        Task<ConsecutiveDataPointObservationsCollection> GetPageOfObservations(
+            TDataPointTypeEnum type);
     }
 }

@@ -7,14 +7,21 @@
     "Microsoft.Design",
     "CA1031:DoNotCatchGeneralExceptionTypes",
     Scope = "member",
-    Target = "DAaVE.Storage.Azure.CloudTableDataPointStorage`1+<GetPageOfRawData>d__6.#MoveNext()",
+    Target = "DAaVE.Storage.Azure.CloudTableDataPointStorage`1+<GetPageOfObservations>d__6.#MoveNext()",
     Justification = "The IL generated when using the await operator does re-throw exceptions from the task, but is too complex for FXCop to be able to determine this.")]
 
 [assembly: System.Diagnostics.CodeAnalysis.SuppressMessage(
     "Microsoft.Design",
     "CA1031:DoNotCatchGeneralExceptionTypes",
     Scope = "member",
-    Target = "DAaVE.Storage.Azure.CloudTableDataPointStorage`1+<RebuildRawDataPageBuffersForType>d__9.#MoveNext()",
+    Target = "DAaVE.Storage.Azure.CloudTableDataPointStorage`1+<RebuildObservationCacheForType>d__9.#MoveNext()",
+    Justification = "The IL generated when using the await operator does re-throw exceptions from the task, but is too complex for FXCop to be able to determine this.")]
+
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "Microsoft.Design", 
+    "CA1031:DoNotCatchGeneralExceptionTypes", 
+    Scope = "member", 
+    Target = "DAaVE.Storage.Azure.CloudTableDataPointStorage`1+<ExecuteQuerySegmentedAsync>d__10.#MoveNext()",
     Justification = "The IL generated when using the await operator does re-throw exceptions from the task, but is too complex for FXCop to be able to determine this.")]
 
 namespace DAaVE.Storage.Azure
@@ -59,8 +66,8 @@ namespace DAaVE.Storage.Azure
         /// <summary>
         /// Data retrieved from storage but that could be issued to clients upon request.
         /// </summary>
-        private readonly ConcurrentDictionary<TDataPointTypeEnum, ConcurrentDictionary<string, IOrderedEnumerable<DataPointObservation>>> bufferedRawDataPartitionsByType =
-            new ConcurrentDictionary<TDataPointTypeEnum, ConcurrentDictionary<string, IOrderedEnumerable<DataPointObservation>>>();
+        private readonly ConcurrentDictionary<TDataPointTypeEnum, DataPointObservationCache> cachedObservationPartitionsByType =
+            new ConcurrentDictionary<TDataPointTypeEnum, DataPointObservationCache>();
 
         /// <summary>
         /// The table where raw data points are stored.
@@ -122,43 +129,47 @@ namespace DAaVE.Storage.Azure
         }
 
         /// <inheritdoc/>
-        public async Task<ConsecutiveDataPointObservationsCollection> GetPageOfRawData(TDataPointTypeEnum type)
+        public async Task<ConsecutiveDataPointObservationsCollection> GetPageOfObservations(TDataPointTypeEnum type)
         {
-            this.bufferedRawDataPartitionsByType.AddOrUpdate(
+            this.cachedObservationPartitionsByType.AddOrUpdate(
                 key: type,
-                addValueFactory: _ => new ConcurrentDictionary<string, IOrderedEnumerable<DataPointObservation>>(),
+                addValueFactory: _ => new DataPointObservationCache(),
                 updateValueFactory: (_, existing) => existing);
 
-            ConcurrentDictionary<string, IOrderedEnumerable<DataPointObservation>> bufferedPartitions = null;
-            if (!this.bufferedRawDataPartitionsByType.TryGetValue(type, out bufferedPartitions) || !bufferedPartitions.Any())
+            DataPointObservationCache bufferedPartitions = null;
+            if (!this.cachedObservationPartitionsByType.TryGetValue(type, out bufferedPartitions) || !bufferedPartitions.Any())
             {
-                await this.RebuildRawDataPageBuffersForType(type);
+                await this.RebuildObservationCacheForType(type);
 
-                if (!this.bufferedRawDataPartitionsByType.TryGetValue(type, out bufferedPartitions) || !bufferedPartitions.Any())
+                if (!this.cachedObservationPartitionsByType.TryGetValue(type, out bufferedPartitions) || !bufferedPartitions.Any())
                 {
                     // Either empty, or very nearly empty (due to possible racing of concurrent calls to this method)
                     return ConsecutiveDataPointObservationsCollection.Empty;
                 }
             }
 
-            KeyValuePair<string, IOrderedEnumerable<DataPointObservation>> nextPartitionData = bufferedPartitions.FirstOrDefault();
-            if (nextPartitionData.Equals(default(KeyValuePair<string, DataPointObservation[]>)))
+            KeyValuePair<Tuple<string, bool>, IOrderedEnumerable<DataPointObservation>> nextPartitionData = bufferedPartitions.FirstOrDefault();
+            if (nextPartitionData.Equals(default(KeyValuePair<Tuple<string, bool>, DataPointObservation[]>)))
             {
                 // Definite racing of concurrent calls to this method. The buffer is nearly empty anyway so no work for this caller:
                 return ConsecutiveDataPointObservationsCollection.Empty;
             }
 
-            var firehosePartition = nextPartitionData.Key;
+            string firehosePartition = nextPartitionData.Key.Item1;
+            bool isPartialPage = nextPartitionData.Key.Item2;
+            IOrderedEnumerable<DataPointObservation> observations = nextPartitionData.Value;
+            Action onAggregationSuccess = () =>
+            {
+                IOrderedEnumerable<DataPointObservation> _;
+                this.cachedObservationPartitionsByType[type].TryRemove(nextPartitionData.Key, out _);
+            };
             return new ObservationsSinglePartitionCollection<TDataPointTypeEnum>(
                 type,
                 firehosePartition, 
                 this.aggregationTable, 
-                onAggregationSuccess: () => 
-                {
-                    IOrderedEnumerable<DataPointObservation> _;
-                    this.bufferedRawDataPartitionsByType[type].TryRemove(firehosePartition, out _);
-                }, 
-                rawDataPoints: nextPartitionData.Value);
+                onAggregationSuccess,
+                observations,
+                isPartialPage);
         }
 
         /// <summary>
@@ -215,9 +226,9 @@ namespace DAaVE.Storage.Azure
         /// <returns>
         /// A running task that upon successful completion guarantees that if any raw data is
         /// available for aggregation, it will have been placed in 
-        /// <see cref="bufferedRawDataPartitionsByType"/>.
+        /// <see cref="cachedObservationPartitionsByType"/>.
         /// </returns>
-        private async Task RebuildRawDataPageBuffersForType(TDataPointTypeEnum type)
+        private async Task RebuildObservationCacheForType(TDataPointTypeEnum type)
         {
             DateTime utcNow = DateTime.UtcNow;
             IEnumerable<string> partitions = ObservationCloudTableEntity<TDataPointTypeEnum>.GetPartitions(
@@ -225,30 +236,59 @@ namespace DAaVE.Storage.Azure
                 utcNow - CloudTableDataPointStorage.MaximumFireHoseRecentDataPointAge,
                 utcNow - CloudTableDataPointStorage.ProcessingDelay);
 
+            string lastPartition = partitions.Last();
+
             foreach (string partition in partitions)
             {
-                TableQuery<ObservationCloudTableEntity<TDataPointTypeEnum>> tableQuery = 
+                bool isPartial = partition.Equals(lastPartition);
+
+                Tuple<string, bool> cacheKey = new Tuple<string, bool>(partition, isPartial);
+
+                TableQuery<ObservationCloudTableEntity<TDataPointTypeEnum>> tableQuery =
                     CreateTableQueuery(partition);
 
-                IList<IEnumerable<DataPointObservation>> allSegments = new List<IEnumerable<DataPointObservation>>();
-                TableContinuationToken continuationToken = null;
-                do
-                {
-                    TableQuerySegment<ObservationCloudTableEntity<TDataPointTypeEnum>> segment =
-                        await this.firehoseTable.ExecuteQuerySegmentedAsync(tableQuery, continuationToken);
-
-                    allSegments.Add(segment.Results.Select(e => new DataPointObservation() { UtcTimestamp = e.CollectionTimeUtc, Value = e.Value }));
-
-                    continuationToken = segment.ContinuationToken;
-                }
-                while (continuationToken != null);
+                IList<IEnumerable<DataPointObservation>> allSegments = await this.ExecuteQuerySegmentedAsync(tableQuery);
 
                 if (allSegments.Any())
                 {
                     IEnumerable<DataPointObservation> allPoints = allSegments.Aggregate((a, b) => a.Concat(b));
-                    this.bufferedRawDataPartitionsByType[type][partition] = allPoints.OrderBy(dp => dp.UtcTimestamp);
+                    this.cachedObservationPartitionsByType[type][cacheKey] = allPoints.OrderBy(dp => dp.UtcTimestamp);
                 }
             }
+        }
+
+        /// <summary>
+        /// Executes a Table Storage Query synchronously (in segments if needed) and returns all results on
+        /// successful completion.
+        /// </summary>
+        /// <param name="tableQuery">The query to execute.</param>
+        /// <returns>A running task that, on completion will provide all results from the table query.</returns>
+        private async Task<IList<IEnumerable<DataPointObservation>>> ExecuteQuerySegmentedAsync(
+            TableQuery<ObservationCloudTableEntity<TDataPointTypeEnum>> tableQuery)
+        {
+            IList<IEnumerable<DataPointObservation>> allSegments = new List<IEnumerable<DataPointObservation>>();
+            TableContinuationToken continuationToken = null;
+            do
+            {
+                TableQuerySegment<ObservationCloudTableEntity<TDataPointTypeEnum>> segment =
+                    await this.firehoseTable.ExecuteQuerySegmentedAsync(tableQuery, continuationToken);
+
+                allSegments.Add(segment.Results.Select(e => new DataPointObservation() { UtcTimestamp = e.CollectionTimeUtc, Value = e.Value }));
+
+                continuationToken = segment.ContinuationToken;
+            }
+            while (continuationToken != null);
+
+            return allSegments;
+        }
+
+        /// <summary>
+        /// A thread safe cache of (possibly incomplete) pages of observations of a single data point that
+        /// have not yet been passed to an aggregator. The cache key is the [CloudTablePartitionKey, IsPartial] 
+        /// tuple.
+        /// </summary>
+        private sealed class DataPointObservationCache : ConcurrentDictionary<Tuple<string, bool>, IOrderedEnumerable<DataPointObservation>>
+        {
         }
     }
 }

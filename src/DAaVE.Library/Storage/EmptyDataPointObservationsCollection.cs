@@ -47,6 +47,17 @@ namespace DAaVE.Library.Storage
         }
 
         /// <summary>
+        /// Empty pages are always considered incomplete.
+        /// </summary>
+        public override bool IsPartial
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Does nothing.
         /// </summary>
         /// <param name="aggregatedDataPoints">This parameter is not used.</param>
