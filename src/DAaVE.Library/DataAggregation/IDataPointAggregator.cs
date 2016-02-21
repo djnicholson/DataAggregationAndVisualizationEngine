@@ -6,7 +6,8 @@
 namespace DAaVE.Library.DataAggregation
 {
     using System.Collections.Generic;
-    using System.Linq;
+
+    using DAaVE.Library.Storage;
 
     /// <summary>
     /// Given a contiguous segment of raw collected data points, produces a stream of corresponding
@@ -15,7 +16,17 @@ namespace DAaVE.Library.DataAggregation
     public interface IDataPointAggregator
     {
         /// <summary>
-        /// Aggregates the provided raw data points. The mapping from observation time to aggregation 
+        /// Aggregates the provided raw data points in a repeatable way.
+        /// </summary>
+        /// <param name="continuousObservations">
+        /// An sequence of observations of a specific data point that may or may not be considered a 'complete
+        /// page' of observations. It is always guaranteed that the sequence is in ascending observation time
+        /// order; for complete pages, it is also guaranteed that there are no missing intermediary points in
+        /// the sequence. For incomplete pages, it is guaranteed that the same page (possibly with missing 
+        /// points added) will be provided for aggregation again at a later time.
+        /// </param>
+        /// <returns>
+        /// A stream of aggregated points in arbitrary order. The mapping from observation time to aggregation 
         /// timestamp must be fixed, This facilitates: 
         /// - Continual creation of increasingly accurate aggregation of a recent time window as more raw
         ///   data observations become available.
@@ -23,13 +34,8 @@ namespace DAaVE.Library.DataAggregation
         ///   aggregated, or whether the aggregation was correct.
         /// - Failover between aggregator instances without quorum (at the expense of redundant re-computation
         ///   of some aggregations during the failover period).
-        /// TODO: Describe a contract for receiving early previews of the latest (incomplete) fire hose 
-        /// partition (and opting not to output any aggregate points).
-        /// </summary>
-        /// <param name="contiguousDataSegment">
-        /// A contiguous segment of raw observed data point values (in ascending order by collection time).
-        /// </param>
-        /// <returns>A stream of aggregated points in arbitrary order.</returns>
-        IEnumerable<AggregatedDataPoint> Aggregate(IOrderedEnumerable<DataPointObservation> contiguousDataSegment);
+        /// </returns>
+        IEnumerable<AggregatedDataPoint> Aggregate(
+            ConsecutiveDataPointObservationsCollection continuousObservations);
     }
 }
