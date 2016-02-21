@@ -59,7 +59,7 @@ namespace DAaVE.Library.DataAggregation
 
                     while (true)
                     {
-                        ContiguousRawDataPointCollection pageOfUnaggregatedData;
+                        ConsecutiveDataPointObservationsCollection pageOfUnaggregatedData;
                         do
                         {
                             pageOfUnaggregatedData = await pager.GetPageOfRawData(type);

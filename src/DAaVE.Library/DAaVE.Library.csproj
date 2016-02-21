@@ -32,15 +32,15 @@
     <Compile Include="DataCollection\DataCollector.cs" />
     <Compile Include="DataCollection\Observation.cs" />
     <Compile Include="DataCollection\DataCollectorAttribute.cs" />
-    <Compile Include="DataPoint.cs" />
+    <Compile Include="DataCollection\DataPointObservation.cs" />
     <Compile Include="ErrorHandling\ErrorSinks\ConsoleErrorSink.cs" />
     <Compile Include="ErrorHandling\IErrorSink.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Storage\EmptyRawDataPointCollection.cs" />
+    <Compile Include="Storage\EmptyDataPointObservationsCollection.cs" />
     <Compile Include="Storage\IDataPointFireHose.cs" />
     <Compile Include="Storage\IDataPointPager.cs" />
-    <Compile Include="Storage\ContiguousRawDataPointCollection.cs" />
+    <Compile Include="Storage\ConsecutiveDataPointObservationsCollection.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Query\" />

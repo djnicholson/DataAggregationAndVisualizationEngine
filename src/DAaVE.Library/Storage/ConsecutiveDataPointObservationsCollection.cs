@@ -1,4 +1,4 @@
-﻿// <copyright file="ContiguousRawDataPointCollection.cs" company="David Nicholson">
+﻿// <copyright file="ConsecutiveDataPointObservationsCollection.cs" company="David Nicholson">
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 // <summary>See class header.</summary>
@@ -17,18 +17,18 @@ namespace DAaVE.Library.Storage
     /// Represents a contiguous segment of raw data points that are expected to be aggregated
     /// by some implementation of <see cref="IDataPointAggregator"/>.
     /// </summary>
-    public abstract class ContiguousRawDataPointCollection : IOrderedEnumerable<DataPoint>
+    public abstract class ConsecutiveDataPointObservationsCollection : IOrderedEnumerable<DataPointObservation>
     {
         /// <summary>
         /// All raw data points within this time segment, in ascending time order.
         /// </summary>
-        private IOrderedEnumerable<DataPoint> rawDataPoints;
+        private IOrderedEnumerable<DataPointObservation> rawDataPoints;
 
         /// <summary>
-        /// Initializes a new instance of the ContiguousRawDataPointCollection class.
+        /// Initializes a new instance of the ConsecutiveDataPointObservationsCollection class.
         /// </summary>
         /// <param name="rawDataPoints">All raw data points within this time segment, in ascending time order.</param>
-        protected ContiguousRawDataPointCollection(IOrderedEnumerable<DataPoint> rawDataPoints)
+        protected ConsecutiveDataPointObservationsCollection(IOrderedEnumerable<DataPointObservation> rawDataPoints)
         {
             this.rawDataPoints = rawDataPoints;
         }
@@ -37,11 +37,11 @@ namespace DAaVE.Library.Storage
         /// Gets a value representing a zero-length segment of raw data points.
         /// </summary>
         /// <value>A zero-length segment of raw data points that ignores all aggregation responses.</value>
-        public static ContiguousRawDataPointCollection Empty
+        public static ConsecutiveDataPointObservationsCollection Empty
         {
             get
             {
-                return EmptyRawDataPointCollection.Instance;
+                return EmptyDataPointObservationsCollection.Instance;
             }
         }
 
@@ -49,7 +49,7 @@ namespace DAaVE.Library.Storage
         /// Facilitates enumeration of all data points in ascending order by observation time.
         /// </summary>
         /// <returns>An enumerator of raw data points.</returns>
-        public IEnumerator<DataPoint> GetEnumerator()
+        public IEnumerator<DataPointObservation> GetEnumerator()
         {
             return this.rawDataPoints.GetEnumerator();
         }
@@ -60,7 +60,7 @@ namespace DAaVE.Library.Storage
         /// <returns>See <see cref="GetEnumerator"/>.</returns>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return (this as ContiguousRawDataPointCollection).GetEnumerator();
+            return (this as ConsecutiveDataPointObservationsCollection).GetEnumerator();
         }
 
         /// <summary>
@@ -78,7 +78,10 @@ namespace DAaVE.Library.Storage
         public abstract Task ProvideAggregatedData(IEnumerable<AggregatedDataPoint> aggregatedDataPoints);
 
         /// <inheritdoc/>
-        public IOrderedEnumerable<DataPoint> CreateOrderedEnumerable<TKey>(Func<DataPoint, TKey> keySelector, IComparer<TKey> comparer, bool descending)
+        public IOrderedEnumerable<DataPointObservation> CreateOrderedEnumerable<TKey>(
+            Func<DataPointObservation, TKey> keySelector, 
+            IComparer<TKey> comparer, 
+            bool descending)
         {
             return descending ?
                 this.rawDataPoints.OrderByDescending(keySelector, comparer) :

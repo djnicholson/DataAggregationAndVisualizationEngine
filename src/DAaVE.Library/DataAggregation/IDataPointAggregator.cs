@@ -23,11 +23,13 @@ namespace DAaVE.Library.DataAggregation
         ///   aggregated, or whether the aggregation was correct.
         /// - Failover between aggregator instances without quorum (at the expense of redundant re-computation
         ///   of some aggregations during the failover period).
+        /// TODO: Describe a contract for receiving early previews of the latest (incomplete) fire hose 
+        /// partition (and opting not to output any aggregate points).
         /// </summary>
         /// <param name="contiguousDataSegment">
         /// A contiguous segment of raw observed data point values (in ascending order by collection time).
         /// </param>
         /// <returns>A stream of aggregated points in arbitrary order.</returns>
-        IEnumerable<AggregatedDataPoint> Aggregate(IOrderedEnumerable<DataPoint> contiguousDataSegment);
+        IEnumerable<AggregatedDataPoint> Aggregate(IOrderedEnumerable<DataPointObservation> contiguousDataSegment);
     }
 }

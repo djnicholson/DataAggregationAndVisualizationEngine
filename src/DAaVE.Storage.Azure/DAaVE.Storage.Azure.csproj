@@ -52,11 +52,11 @@
     <Compile Include="AggregatedDataPointCloudTableEntity.cs" />
     <Compile Include="CloudTableDataPointStorage.cs" />
     <Compile Include="CloudTableDataPointStorageStatic.cs" />
-    <Compile Include="DataPointCloudTableEntity.cs" />
+    <Compile Include="ObservationCloudTableEntity.cs" />
     <Compile Include="DataPointTypeAttributes.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SinglePartitionRawDataCollection.cs" />
+    <Compile Include="ObservationsSinglePartitionCollection.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DaAVE.Library\DAaVE.Library.csproj">

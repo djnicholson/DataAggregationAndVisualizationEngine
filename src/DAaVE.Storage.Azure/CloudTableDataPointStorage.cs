@@ -59,8 +59,8 @@ namespace DAaVE.Storage.Azure
         /// <summary>
         /// Data retrieved from storage but that could be issued to clients upon request.
         /// </summary>
-        private readonly ConcurrentDictionary<TDataPointTypeEnum, ConcurrentDictionary<string, IOrderedEnumerable<DataPoint>>> bufferedRawDataPartitionsByType =
-            new ConcurrentDictionary<TDataPointTypeEnum, ConcurrentDictionary<string, IOrderedEnumerable<DataPoint>>>();
+        private readonly ConcurrentDictionary<TDataPointTypeEnum, ConcurrentDictionary<string, IOrderedEnumerable<DataPointObservation>>> bufferedRawDataPartitionsByType =
+            new ConcurrentDictionary<TDataPointTypeEnum, ConcurrentDictionary<string, IOrderedEnumerable<DataPointObservation>>>();
 
         /// <summary>
         /// The table where raw data points are stored.
@@ -98,13 +98,13 @@ namespace DAaVE.Storage.Azure
         /// </summary>
         /// <param name="rawDataSample">Data points produced by a collector. These may not be recent.</param>
         /// <returns>The task within which the storage is taking place.</returns>
-        public Task StoreRawData(IDictionary<TDataPointTypeEnum, DataPoint> rawDataSample)
+        public Task StoreRawData(IDictionary<TDataPointTypeEnum, DataPointObservation> rawDataSample)
         {
             DateTime postMarkedOnUtc = DateTime.UtcNow;
 
-            IEnumerable<DataPointCloudTableEntity<TDataPointTypeEnum>> recentDataPoints = rawDataSample
+            IEnumerable<ObservationCloudTableEntity<TDataPointTypeEnum>> recentDataPoints = rawDataSample
                 .Where(d => (postMarkedOnUtc - d.Value.UtcTimestamp) < CloudTableDataPointStorage.MaximumFireHoseRecentDataPointAge)
-                .Select(d => new DataPointCloudTableEntity<TDataPointTypeEnum>(d.Key, d.Value));
+                .Select(d => new ObservationCloudTableEntity<TDataPointTypeEnum>(d.Key, d.Value));
 
             IDictionary<string, TableBatchOperation> batches = CreateInsertOperations(recentDataPoints);
 
@@ -122,14 +122,14 @@ namespace DAaVE.Storage.Azure
         }
 
         /// <inheritdoc/>
-        public async Task<ContiguousRawDataPointCollection> GetPageOfRawData(TDataPointTypeEnum type)
+        public async Task<ConsecutiveDataPointObservationsCollection> GetPageOfRawData(TDataPointTypeEnum type)
         {
             this.bufferedRawDataPartitionsByType.AddOrUpdate(
                 key: type,
-                addValueFactory: _ => new ConcurrentDictionary<string, IOrderedEnumerable<DataPoint>>(),
+                addValueFactory: _ => new ConcurrentDictionary<string, IOrderedEnumerable<DataPointObservation>>(),
                 updateValueFactory: (_, existing) => existing);
 
-            ConcurrentDictionary<string, IOrderedEnumerable<DataPoint>> bufferedPartitions = null;
+            ConcurrentDictionary<string, IOrderedEnumerable<DataPointObservation>> bufferedPartitions = null;
             if (!this.bufferedRawDataPartitionsByType.TryGetValue(type, out bufferedPartitions) || !bufferedPartitions.Any())
             {
                 await this.RebuildRawDataPageBuffersForType(type);
@@ -137,25 +137,25 @@ namespace DAaVE.Storage.Azure
                 if (!this.bufferedRawDataPartitionsByType.TryGetValue(type, out bufferedPartitions) || !bufferedPartitions.Any())
                 {
                     // Either empty, or very nearly empty (due to possible racing of concurrent calls to this method)
-                    return ContiguousRawDataPointCollection.Empty;
+                    return ConsecutiveDataPointObservationsCollection.Empty;
                 }
             }
 
-            KeyValuePair<string, IOrderedEnumerable<DataPoint>> nextPartitionData = bufferedPartitions.FirstOrDefault();
-            if (nextPartitionData.Equals(default(KeyValuePair<string, DataPoint[]>)))
+            KeyValuePair<string, IOrderedEnumerable<DataPointObservation>> nextPartitionData = bufferedPartitions.FirstOrDefault();
+            if (nextPartitionData.Equals(default(KeyValuePair<string, DataPointObservation[]>)))
             {
                 // Definite racing of concurrent calls to this method. The buffer is nearly empty anyway so no work for this caller:
-                return ContiguousRawDataPointCollection.Empty;
+                return ConsecutiveDataPointObservationsCollection.Empty;
             }
 
             var firehosePartition = nextPartitionData.Key;
-            return new SinglePartitionRawDataCollection<TDataPointTypeEnum>(
+            return new ObservationsSinglePartitionCollection<TDataPointTypeEnum>(
                 type,
                 firehosePartition, 
                 this.aggregationTable, 
                 onAggregationSuccess: () => 
                 {
-                    IOrderedEnumerable<DataPoint> _;
+                    IOrderedEnumerable<DataPointObservation> _;
                     this.bufferedRawDataPartitionsByType[type].TryRemove(firehosePartition, out _);
                 }, 
                 rawDataPoints: nextPartitionData.Value);
@@ -167,10 +167,10 @@ namespace DAaVE.Storage.Azure
         /// <param name="recentDataPoints">The data to be inserted.</param>
         /// <returns>A set of operations to perform.</returns>
         private static IDictionary<string, TableBatchOperation> CreateInsertOperations(
-            IEnumerable<DataPointCloudTableEntity<TDataPointTypeEnum>> recentDataPoints)
+            IEnumerable<ObservationCloudTableEntity<TDataPointTypeEnum>> recentDataPoints)
         {
             IDictionary<string, TableBatchOperation> batches = new Dictionary<string, TableBatchOperation>();
-            foreach (DataPointCloudTableEntity<TDataPointTypeEnum> entity in recentDataPoints)
+            foreach (ObservationCloudTableEntity<TDataPointTypeEnum> entity in recentDataPoints)
             {
                 if (!batches.ContainsKey(entity.PartitionKey))
                 {
@@ -189,7 +189,7 @@ namespace DAaVE.Storage.Azure
         /// </summary>
         /// <param name="partition">The partition to query.</param>
         /// <returns>A table query that can be used to execute a query on a table.</returns>
-        private static TableQuery<DataPointCloudTableEntity<TDataPointTypeEnum>> CreateTableQueuery(string partition)
+        private static TableQuery<ObservationCloudTableEntity<TDataPointTypeEnum>> CreateTableQueuery(string partition)
         {
             string partitionFilter = TableQuery.GenerateFilterCondition(
                 "PartitionKey",
@@ -201,8 +201,8 @@ namespace DAaVE.Storage.Azure
                 QueryComparisons.GreaterThan,
                 DateTimeOffset.UtcNow.Subtract(CloudTableDataPointStorage.ProcessingDelay));
 
-            TableQuery<DataPointCloudTableEntity<TDataPointTypeEnum>> tableQuery =
-                (new TableQuery<DataPointCloudTableEntity<TDataPointTypeEnum>>())
+            TableQuery<ObservationCloudTableEntity<TDataPointTypeEnum>> tableQuery =
+                (new TableQuery<ObservationCloudTableEntity<TDataPointTypeEnum>>())
                 .Where(partitionFilter)
                 .Where(recencyFilter);
             return tableQuery;
@@ -220,24 +220,24 @@ namespace DAaVE.Storage.Azure
         private async Task RebuildRawDataPageBuffersForType(TDataPointTypeEnum type)
         {
             DateTime utcNow = DateTime.UtcNow;
-            IEnumerable<string> partitions = DataPointCloudTableEntity<TDataPointTypeEnum>.GetPartitions(
+            IEnumerable<string> partitions = ObservationCloudTableEntity<TDataPointTypeEnum>.GetPartitions(
                 type,
                 utcNow - CloudTableDataPointStorage.MaximumFireHoseRecentDataPointAge,
                 utcNow - CloudTableDataPointStorage.ProcessingDelay);
 
             foreach (string partition in partitions)
             {
-                TableQuery<DataPointCloudTableEntity<TDataPointTypeEnum>> tableQuery = 
+                TableQuery<ObservationCloudTableEntity<TDataPointTypeEnum>> tableQuery = 
                     CreateTableQueuery(partition);
 
-                IList<IEnumerable<DataPoint>> allSegments = new List<IEnumerable<DataPoint>>();
+                IList<IEnumerable<DataPointObservation>> allSegments = new List<IEnumerable<DataPointObservation>>();
                 TableContinuationToken continuationToken = null;
                 do
                 {
-                    TableQuerySegment<DataPointCloudTableEntity<TDataPointTypeEnum>> segment =
+                    TableQuerySegment<ObservationCloudTableEntity<TDataPointTypeEnum>> segment =
                         await this.firehoseTable.ExecuteQuerySegmentedAsync(tableQuery, continuationToken);
 
-                    allSegments.Add(segment.Results.Select(e => new DataPoint() { UtcTimestamp = e.CollectionTimeUtc, Value = e.Value }));
+                    allSegments.Add(segment.Results.Select(e => new DataPointObservation() { UtcTimestamp = e.CollectionTimeUtc, Value = e.Value }));
 
                     continuationToken = segment.ContinuationToken;
                 }
@@ -245,7 +245,7 @@ namespace DAaVE.Storage.Azure
 
                 if (allSegments.Any())
                 {
-                    IEnumerable<DataPoint> allPoints = allSegments.Aggregate((a, b) => a.Concat(b));
+                    IEnumerable<DataPointObservation> allPoints = allSegments.Aggregate((a, b) => a.Concat(b));
                     this.bufferedRawDataPartitionsByType[type][partition] = allPoints.OrderBy(dp => dp.UtcTimestamp);
                 }
             }

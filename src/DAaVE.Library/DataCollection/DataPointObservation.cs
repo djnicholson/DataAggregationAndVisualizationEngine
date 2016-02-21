@@ -1,4 +1,4 @@
-﻿// <copyright file="DataPoint.cs" company="David Nicholson">
+﻿// <copyright file="DataPointObservation.cs" company="David Nicholson">
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 // <summary>See class header.</summary>
@@ -10,24 +10,24 @@ namespace DAaVE.Library
     /// <summary>
     /// The raw value collected for a specific data point, at a specific time.
     /// </summary>
-    public struct DataPoint
+    public struct DataPointObservation
     {
         /// <summary>
-        /// Initializes a new instance of the DataPoint struct for a specific value observed
+        /// Initializes a new instance of the DataPointObservation struct for a specific value observed
         /// at a specific time.
         /// </summary>
         /// <param name="utcTimestamp">Time stamp of the observation (must be <see cref="DateTimeKind.Utc"/>).</param>
         /// <param name="value">The data value observed.</param>
-        internal DataPoint(DateTime utcTimestamp, double value)
+        internal DataPointObservation(DateTime utcTimestamp, double value)
         {
             this.UtcTimestamp = utcTimestamp;
             this.Value = value;
         }
 
         /// <summary>
-        /// Gets or sets the time of the observation..
+        /// Gets or sets the time of the observation.
         /// </summary>
-        /// <value>The time of the observation..</value>
+        /// <value>The time of the observation.</value>
         public DateTime UtcTimestamp { get; set; }
 
         /// <summary>
@@ -42,19 +42,19 @@ namespace DAaVE.Library
         /// <param name="leftHandSide">Left hand side operand.</param>
         /// <param name="rightHandSide">Right hand side operand.</param>
         /// <returns>True if the two parameters are to be considered exactly equal; false otherwise.</returns>
-        public static bool operator ==(DataPoint leftHandSide, DataPoint rightHandSide)
+        public static bool operator ==(DataPointObservation leftHandSide, DataPointObservation rightHandSide)
         {
             return (leftHandSide.UtcTimestamp == rightHandSide.UtcTimestamp) &&
                 (leftHandSide.Value == rightHandSide.Value);
         }
 
         /// <summary>
-        /// The negation of <see cref="operator ==(DataPoint, DataPoint)"/>.
+        /// The negation of <see cref="operator ==(DataPointObservation, DataPointObservation)"/>.
         /// </summary>
         /// <param name="leftHandSide">Left hand side operand.</param>
         /// <param name="rightHandSide">Right hand side operand.</param>
         /// <returns>True if the two parameters are not exactly identical; false otherwise.</returns>
-        public static bool operator !=(DataPoint leftHandSide, DataPoint rightHandSide)
+        public static bool operator !=(DataPointObservation leftHandSide, DataPointObservation rightHandSide)
         {
             return !(leftHandSide == rightHandSide);
         }
@@ -63,12 +63,12 @@ namespace DAaVE.Library
         /// Determines equality with arbitrary objects.
         /// </summary>
         /// <param name="obj">Candidate for comparison.</param>
-        /// <returns>False for non-DataPoint parameters; uses <see cref="operator ==(DataPoint, DataPoint)"/> otherwise.</returns>
+        /// <returns>False for non-DataPoint parameters; uses <see cref="operator ==(DataPointObservation, DataPointObservation)"/> otherwise.</returns>
         public override bool Equals(object obj)
         {
-            if (obj is DataPoint)
+            if (obj is DataPointObservation)
             {
-                return ((DataPoint)obj) == this;
+                return ((DataPointObservation)obj) == this;
             }
 
             return false;

@@ -1,4 +1,4 @@
-﻿// <copyright file="DataPointCloudTableEntity.cs" company="David Nicholson">
+﻿// <copyright file="ObservationCloudTableEntity.cs" company="David Nicholson">
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 // <summary>See class header.</summary>
@@ -18,7 +18,7 @@ namespace DAaVE.Storage.Azure
     /// exact value of some data point type at some time as observed by a single data collector.
     /// </summary>
     /// <typeparam name="TDataPointTypeEnum">Possible types of data.</typeparam>
-    internal sealed class DataPointCloudTableEntity<TDataPointTypeEnum> : TableEntity
+    internal sealed class ObservationCloudTableEntity<TDataPointTypeEnum> : TableEntity
         where TDataPointTypeEnum : struct, IComparable, IFormattable
     {
         /// <summary>
@@ -33,19 +33,19 @@ namespace DAaVE.Storage.Azure
             new DataPointTypeAttributes<TDataPointTypeEnum>();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DataPointCloudTableEntity{TDataPointTypeEnum}"/> class.
+        /// Initializes a new instance of the <see cref="ObservationCloudTableEntity{TDataPointTypeEnum}"/> class.
         /// For use in deserialization only, not to be called explicitly.
         /// </summary>
-        public DataPointCloudTableEntity()
+        public ObservationCloudTableEntity()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DataPointCloudTableEntity{TDataPointTypeEnum}"/> class.
+        /// Initializes a new instance of the ObservationCloudTableEntity class.
         /// </summary>
         /// <param name="key">The type of data point being collected.</param>
         /// <param name="value">The current value of the data point type.</param>
-        public DataPointCloudTableEntity(TDataPointTypeEnum key, DataPoint value)
+        public ObservationCloudTableEntity(TDataPointTypeEnum key, DataPointObservation value)
         {
             this.PersistedVersion = RuntimeVersion;
             this.CollectionTimeUtc = value.UtcTimestamp;

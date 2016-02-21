@@ -75,7 +75,7 @@ namespace DAaVE.Library.DataCollection
                     Action<Observation<TDataPointTypeEnum>> resultProcessor = observation =>
                     {
                         dataPointFireHose.StoreRawData(
-                            observation.Data.ToDictionary(datum => datum.Key, datum => new DataPoint(observation.DateTimeUtc, datum.Value)));
+                            observation.Data.ToDictionary(datum => datum.Key, datum => new DataPointObservation(observation.DateTimeUtc, datum.Value)));
                     };
 
                     var newPollerThread = new DataCollectorObserver<TDataPointTypeEnum>(newDataCollector, resultProcessor);

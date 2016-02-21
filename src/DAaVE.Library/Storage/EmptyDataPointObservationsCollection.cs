@@ -1,4 +1,4 @@
-﻿// <copyright file="EmptyRawDataPointCollection.cs" company="David Nicholson">
+﻿// <copyright file="EmptyDataPointObservationsCollection.cs" company="David Nicholson">
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 // <summary>See class header.</summary>
@@ -12,33 +12,33 @@ namespace DAaVE.Library.Storage
     using DAaVE.Library.DataAggregation;
 
     /// <summary>
-    /// Represents an empty (trivially sorted) collection of raw data points.
+    /// Represents an empty (trivially consecutive) collection of raw data points.
     /// Ignores any data provided to <see cref="ProvideAggregatedData(IEnumerable{AggregatedDataPoint})"/>.
     /// </summary>
-    internal sealed class EmptyRawDataPointCollection : ContiguousRawDataPointCollection
+    internal sealed class EmptyDataPointObservationsCollection : ConsecutiveDataPointObservationsCollection
     {
         /// <summary>
         /// A singleton instance.
         /// </summary>
-        private static readonly EmptyRawDataPointCollection InstanceInternal = new EmptyRawDataPointCollection();
+        private static readonly EmptyDataPointObservationsCollection InstanceInternal = new EmptyDataPointObservationsCollection();
 
         /// <summary>
         /// A concrete implementation of an empty <see cref="IOrderedEnumerable{TElement}"/>.
         /// </summary>
-        private static readonly IOrderedEnumerable<DataPoint> EmptyArrayAsOrderedEnumerable =
-            (new DataPoint[0]).OrderBy(_ => 0);
+        private static readonly IOrderedEnumerable<DataPointObservation> EmptyArrayAsOrderedEnumerable =
+            (new DataPointObservation[0]).OrderBy(_ => 0);
 
         /// <summary>
-        /// Initializes a new instance of the EmptyRawDataPointCollection class.
+        /// Initializes a new instance of the EmptyDataPointObservationsCollection class.
         /// </summary>
-        public EmptyRawDataPointCollection() : base(EmptyArrayAsOrderedEnumerable)
+        public EmptyDataPointObservationsCollection() : base(EmptyArrayAsOrderedEnumerable)
         {
         }
 
         /// <summary>
         /// Gets a reference to the singleton instance of EmptyRawDataPointCollection.
         /// </summary>
-        public static EmptyRawDataPointCollection Instance
+        public static EmptyDataPointObservationsCollection Instance
         {
             get
             {

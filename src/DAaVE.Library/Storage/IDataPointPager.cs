@@ -25,6 +25,6 @@ namespace DAaVE.Library.Storage
         /// A running task that upon successful completion will provide a set of raw data
         /// points for aggregation (always non-null, but possibly empty).
         /// </returns>
-        Task<ContiguousRawDataPointCollection> GetPageOfRawData(TDataPointTypeEnum type);
+        Task<ConsecutiveDataPointObservationsCollection> GetPageOfRawData(TDataPointTypeEnum type);
     }
 }

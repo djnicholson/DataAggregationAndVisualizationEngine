@@ -1,4 +1,4 @@
-﻿// <copyright file="SinglePartitionRawDataCollection.cs" company="David Nicholson">
+﻿// <copyright file="ObservationsSinglePartitionCollection.cs" company="David Nicholson">
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 // <summary>See class header.</summary>
@@ -19,10 +19,10 @@ namespace DAaVE.Storage.Azure
     using Microsoft.WindowsAzure.Storage.Table;
 
     /// <summary>
-    /// Provides access to all raw data points in a single raw data partition.
+    /// Provides access to all raw data point observations in a single partition.
     /// </summary>
     /// <typeparam name="TDataPointTypeEnum">An enumeration of all possible data point types.</typeparam>
-    internal class SinglePartitionRawDataCollection<TDataPointTypeEnum> : ContiguousRawDataPointCollection
+    internal class ObservationsSinglePartitionCollection<TDataPointTypeEnum> : ConsecutiveDataPointObservationsCollection
         where TDataPointTypeEnum : struct, IComparable, IFormattable
     {
         /// <summary>
@@ -60,7 +60,7 @@ namespace DAaVE.Storage.Azure
         private readonly Action onAggregationSuccess;
 
         /// <summary>
-        /// Initializes a new instance of the SinglePartitionRawDataCollection class.
+        /// Initializes a new instance of the ObservationsSinglePartitionCollection class.
         /// </summary>
         /// <param name="seriesDataPointType">The type of data being queried.</param>
         /// <param name="firehosePartitionKey">The key for the partition in the raw data table that these points were stored in.</param>
@@ -73,12 +73,12 @@ namespace DAaVE.Storage.Azure
         /// All raw data points of type <paramref name="seriesDataPointType"/> in the <paramref name="firehosePartitionKey"/> partition of 
         /// the fire hose table. In ascending time order.
         /// </param>
-        public SinglePartitionRawDataCollection(
+        public ObservationsSinglePartitionCollection(
             TDataPointTypeEnum seriesDataPointType,
             string firehosePartitionKey,
             CloudTable aggregationTable,
             Action onAggregationSuccess,
-            IOrderedEnumerable<DataPoint> rawDataPoints) : base(rawDataPoints)
+            IOrderedEnumerable<DataPointObservation> rawDataPoints) : base(rawDataPoints)
         {
             this.seriesDataPointType = seriesDataPointType;
             this.firehosePartitionKey = firehosePartitionKey;

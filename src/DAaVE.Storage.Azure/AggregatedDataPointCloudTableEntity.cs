@@ -46,7 +46,7 @@ namespace DAaVE.Storage.Azure
         /// <param name="key">The type of data point being stored.</param>
         /// <param name="value">The current value of the data point.</param>
         /// <param name="rawDataFireHosePartitionKey">
-        /// The partition key for each of the <see cref="DataPointCloudTableEntity{TDataPointTypeEnum}"/> objects that were 
+        /// The partition key for each of the <see cref="ObservationCloudTableEntity{TDataPointTypeEnum}"/> objects that were 
         /// used during this aggregation.
         /// </param>
         public AggregatedDataPointCloudTableEntity(

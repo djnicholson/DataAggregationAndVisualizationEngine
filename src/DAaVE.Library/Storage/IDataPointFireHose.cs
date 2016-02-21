@@ -23,6 +23,6 @@ namespace DAaVE.Library.Storage
         /// <param name="rawDataSample">The raw data points.</param>
         /// <returns>The task where the storage implementation code was/is being invoked.</returns>
         Task StoreRawData(
-            IDictionary<TDataPointTypeEnum, DataPoint> rawDataSample);
+            IDictionary<TDataPointTypeEnum, DataPointObservation> rawDataSample);
     }
 }
