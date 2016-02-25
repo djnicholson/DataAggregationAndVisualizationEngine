@@ -7,11 +7,13 @@ namespace DAaVE.Storage.Azure.Tests
 {
     using System;
 
+    using DAaVE.Library.DataAggregation;
+    using DAaVE.Library.DataAggregation.Aggregators;
     using DAaVE.Library.DataCollection;
     using DAaVE.Storage.Azure;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-
+    
     /// <summary>
     /// Unit tests for the <see cref="DataPointTypeAttributes{TDataPointTypeEnum}"/> class.
     /// </summary>
@@ -29,15 +31,15 @@ namespace DAaVE.Storage.Azure.Tests
             /// Observed once per day.
             /// </summary>
             [ExpectedObservationRate(InHours = 24.0)]
-            ////[AggregateWith(typeof(Foo))]
+            [AggregateWith(typeof(AverageBySecondDataPointAggregator))]
             MinutesOfDaylight = 0,
 
             /// <summary>
             /// Amount of web requests seen in some fixed interval.
             /// </summary>
             [ExpectedObservationRate(InSeconds = 5.0)]
-            ////[AggregateWith(typeof(Bar))]
-            ////[AggregateWith(typeof(Baz))]
+            [AggregateWith(typeof(AverageBySecondDataPointAggregator))]
+            [AggregateWith(typeof(AverageBySecondDataPointAggregator))]
             HttpRequests = 1,
 
             /// <summary>

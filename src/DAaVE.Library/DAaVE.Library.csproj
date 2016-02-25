@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataAggregation\AggregatedDataPoint.cs" />
+    <Compile Include="DataAggregation\AggregateWithAttribute.cs" />
     <Compile Include="DataAggregation\Aggregators\AverageBySecondDataPointAggregator.cs" />
     <Compile Include="DataAggregation\DataAggregationOrchestrator.cs" />
     <Compile Include="DataAggregation\DataAggregationOrchestratorStatic.cs" />
