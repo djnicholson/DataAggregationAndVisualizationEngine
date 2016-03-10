@@ -8,10 +8,11 @@ namespace DAaVE.Library.DataAggregation
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
 
     using DAaVE.Library.ErrorHandling;
     using DAaVE.Library.Storage;
-
+    
     /// <summary>
     /// Continually reads blocks (contiguous segments) of raw observed data point values for each possible data point 
     /// type and passes these blocks into an aggregator; the output from the aggregator is stored.
@@ -39,16 +40,39 @@ namespace DAaVE.Library.DataAggregation
             IDataPointPager<TDataPointTypeEnum> pager,
             IErrorSink errorSink)
         {
-            foreach (TDataPointTypeEnum dataType in Enum.GetValues(typeof(TDataPointTypeEnum)).Cast<TDataPointTypeEnum>())
+            if (aggregator == null)
             {
-                // TODO: Filter by: AggregateWithAttribute
-                var newThread = new DataAggregationBackgroundWorker<TDataPointTypeEnum>(
-                    dataType,
-                    aggregator,
-                    pager,
-                    errorSink);
+                throw new ArgumentNullException("aggregator");
+            }
 
-                this.aggregationThreads.Add(dataType, newThread);
+            if (pager == null)
+            {
+                throw new ArgumentNullException("pager");
+            }
+
+            if (errorSink == null)
+            {
+                throw new ArgumentNullException("errorSink");
+            }
+
+            Type aggregatorType = aggregator.GetType();
+
+            IEnumerable<MemberInfo> dataPointTypeMembersToAggregate = typeof(TDataPointTypeEnum).GetMembers().Where(
+                m => m.GetCustomAttributes<AggregateWithAttribute>().Any(aggregateWith => aggregateWith.AggregatorType == aggregatorType));
+
+            foreach (MemberInfo member in dataPointTypeMembersToAggregate)
+            {
+                TDataPointTypeEnum individualDataType;
+                if (Enum.TryParse<TDataPointTypeEnum>(member.Name, out individualDataType))
+                {
+                    var newThread = new DataAggregationBackgroundWorker<TDataPointTypeEnum>(
+                        individualDataType,
+                        aggregator,
+                        pager,
+                        errorSink);
+
+                    this.aggregationThreads.Add(individualDataType, newThread);
+                }
             }
         }
 

@@ -16,20 +16,20 @@ namespace DAaVE.Library.DataAggregation
     public sealed class AggregateWithAttribute : Attribute
     {
         /// <summary>
-        /// Backing storage for the <see cref="AggregatorImplementation"/> property.
+        /// Backing storage for the <see cref="AggregatorType"/> property.
         /// </summary>
-        private Type aggregatorImplementation;
+        private Type aggregatorType;
 
         /// <summary>
         /// Initializes a new instance of the AggregateWithAttribute class (by specifying the
         /// type of aggregator).
         /// </summary>
-        /// <param name="aggregatorImplementation">
+        /// <param name="aggregatorType">
         /// A type that is a concrete implementation of <see cref="IDataPointAggregator"/>.
         /// </param>
-        public AggregateWithAttribute(Type aggregatorImplementation)
+        public AggregateWithAttribute(Type aggregatorType)
         {
-            this.AggregatorImplementation = aggregatorImplementation;
+            this.AggregatorType = aggregatorType;
         }
 
         /// <summary>
@@ -37,11 +37,11 @@ namespace DAaVE.Library.DataAggregation
         /// to use when aggregating data of the annotated type.
         /// </summary>
         /// <value>The type of the aggregator implementation.</value>
-        public Type AggregatorImplementation
+        public Type AggregatorType
         {
             get
             {
-                return this.aggregatorImplementation;
+                return this.aggregatorType;
             }
 
             private set
@@ -53,7 +53,7 @@ namespace DAaVE.Library.DataAggregation
                         "value");
                 }
 
-                this.aggregatorImplementation = value;
+                this.aggregatorType = value;
             }
         }
     }
