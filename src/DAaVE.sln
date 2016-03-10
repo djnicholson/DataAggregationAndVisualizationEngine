@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAaVE.Storage.Azure", "DAaV
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAaVE.Storage.Azure.Tests", "DAaVE.Storage.Azure.Tests\DAaVE.Storage.Azure.Tests.csproj", "{BF616E8B-4ABC-474A-9542-2F6C0082D0DB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAaVE.Samples", "DAaVE.Samples\DAaVE.Samples.csproj", "{364F7FCF-8F40-4591-967C-9A7160C67C44}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{BF616E8B-4ABC-474A-9542-2F6C0082D0DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF616E8B-4ABC-474A-9542-2F6C0082D0DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF616E8B-4ABC-474A-9542-2F6C0082D0DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{364F7FCF-8F40-4591-967C-9A7160C67C44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{364F7FCF-8F40-4591-967C-9A7160C67C44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{364F7FCF-8F40-4591-967C-9A7160C67C44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{364F7FCF-8F40-4591-967C-9A7160C67C44}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
