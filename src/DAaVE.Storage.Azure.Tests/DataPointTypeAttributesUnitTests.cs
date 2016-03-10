@@ -10,6 +10,9 @@ namespace DAaVE.Storage.Azure.Tests
     using DAaVE.Library.DataAggregation;
     using DAaVE.Library.DataAggregation.Aggregators;
     using DAaVE.Library.DataCollection;
+
+    using DAaVE.Samples;
+
     using DAaVE.Storage.Azure;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -21,55 +24,25 @@ namespace DAaVE.Storage.Azure.Tests
     public class DataPointTypeAttributesUnitTests
     {
         /// <summary>
-        /// Some example data types that illustrate potentially differing observation
-        /// rates.
-        /// </summary>
-        private enum TestDataPointTypes
-        {
-            /// <summary>
-            /// How many minutes of day light were there during this calendar day?
-            /// Observed once per day.
-            /// </summary>
-            [ExpectedObservationRate(InHours = 24.0)]
-            [AggregateWith(typeof(AverageBySecondDataPointAggregator))]
-            MinutesOfDaylight = 0,
-
-            /// <summary>
-            /// Amount of web requests seen in some fixed interval.
-            /// </summary>
-            [ExpectedObservationRate(InSeconds = 5.0)]
-            [AggregateWith(typeof(AverageBySecondDataPointAggregator))]
-            [AggregateWith(typeof(AverageBySecondDataPointAggregator))]
-            HttpRequests = 1,
-
-            /// <summary>
-            /// What is the current 'ask' for BTC? Observed very frequently.
-            /// </summary>
-            ////[AggregateWith(typeof(Baz))]
-            [ExpectedObservationRate(InMinutes = 0.001)]
-            PriceOfBitcoin = 2,
-        }
-
-        /// <summary>
         /// Verify that <see cref="DataPointTypeAttributes{TDataPointTypeEnum}.GetAggregationInputWindowSizeInMinutes(TDataPointTypeEnum)"/> 
         /// aims to store about 1000 observations per partition (based on the observation rate supplied by data point type attribution).
         /// </summary>
         [TestMethod]
         public void GetAggregationInputWindowSizeInMinutesCustomization()
         {
-            DataPointTypeAttributes<TestDataPointTypes> target = new DataPointTypeAttributes<TestDataPointTypes>();
+            DataPointTypeAttributes<SampleDataPointType> target = new DataPointTypeAttributes<SampleDataPointType>();
 
             Assert.AreEqual<double>(
                 1.024,
-                target.GetAggregationInputWindowSizeInMinutes(TestDataPointTypes.PriceOfBitcoin));
+                target.GetAggregationInputWindowSizeInMinutes(SampleDataPointType.PriceOfBitcoin));
 
             Assert.AreEqual<double>(
                 1474560.0,
-                Math.Round(target.GetAggregationInputWindowSizeInMinutes(TestDataPointTypes.MinutesOfDaylight)));
+                Math.Round(target.GetAggregationInputWindowSizeInMinutes(SampleDataPointType.MinutesOfDaylight)));
 
             Assert.AreEqual<double>(
                 85.0,
-                Math.Round(target.GetAggregationInputWindowSizeInMinutes(TestDataPointTypes.HttpRequests)));
+                Math.Round(target.GetAggregationInputWindowSizeInMinutes(SampleDataPointType.HttpRequests)));
         }
     }
 }

@@ -19,6 +19,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SampleDataPointType.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DaAVE.Library\DAaVE.Library.csproj">
+      <Project>{ab831a3a-1ca5-4d62-9fc6-d54c3f7679a1}</Project>
+      <Name>DAaVE.Library</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>

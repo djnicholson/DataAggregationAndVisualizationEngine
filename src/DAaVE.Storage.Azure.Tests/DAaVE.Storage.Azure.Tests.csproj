@@ -27,6 +27,10 @@
       <Project>{ab831a3a-1ca5-4d62-9fc6-d54c3f7679a1}</Project>
       <Name>DAaVE.Library</Name>
     </ProjectReference>
+    <ProjectReference Include="..\DAaVE.Samples\DAaVE.Samples.csproj">
+      <Project>{364f7fcf-8f40-4591-967c-9a7160c67c44}</Project>
+      <Name>DAaVE.Samples</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DAaVE.Storage.Azure\DAaVE.Storage.Azure.csproj">
       <Project>{3ef4d74d-e5d4-4ee7-a2f6-c9054808dce4}</Project>
       <Name>DAaVE.Storage.Azure</Name>
