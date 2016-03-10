@@ -6,6 +6,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DAaVE.Library</RootNamespace>
     <AssemblyName>DAaVE.Library</AssemblyName>
+    <InternalsVisibleTo>DAaVE.Library.Tests</InternalsVisibleTo>
   </PropertyGroup>
   <Import Project="..\common.props" />
   <ItemGroup>
