@@ -18,6 +18,7 @@
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AverageBySecondDataPointAggregatorUnitTests.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

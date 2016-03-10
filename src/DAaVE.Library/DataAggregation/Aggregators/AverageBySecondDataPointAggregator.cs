@@ -47,7 +47,7 @@ namespace DAaVE.Library.DataAggregation.Aggregators
         /// </summary>
         /// <param name="input">The time-stamp to truncate.</param>
         /// <returns>The input time-stamp with any components more accurate than seconds set to 0.</returns>
-        private static DateTime TruncateToSecondsUtc(DateTime input)
+        internal static DateTime TruncateToSecondsUtc(DateTime input)
         {
             return new DateTime(input.Year, input.Month, input.Day, input.Hour, input.Minute, input.Second, input.Kind);
         }

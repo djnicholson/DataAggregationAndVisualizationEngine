@@ -7,10 +7,6 @@ namespace DAaVE.Storage.Azure.Tests
 {
     using System;
 
-    using DAaVE.Library.DataAggregation;
-    using DAaVE.Library.DataAggregation.Aggregators;
-    using DAaVE.Library.DataCollection;
-
     using DAaVE.Samples;
 
     using DAaVE.Storage.Azure;
