@@ -19,7 +19,7 @@ namespace DAaVE.Library.DataAggregation
         /// Aggregates the provided raw data points in a repeatable way.
         /// </summary>
         /// <param name="continuousObservations">
-        /// An sequence of observations of a specific data point that may or may not be considered a 'complete
+        /// A sequence of observations of a specific data point that may or may not be considered a 'complete
         /// page' of observations. It is always guaranteed that the sequence is in ascending observation time
         /// order; for complete pages, it is also guaranteed that there are no missing intermediary points in
         /// the sequence. For incomplete pages, it is guaranteed that the same page (possibly with missing 

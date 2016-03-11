@@ -86,7 +86,7 @@ namespace DAaVE.Library.Storage
         /// A running task that can optionally be awaited if the caller wants to know that the aggregation
         /// results were successfully persisted.
         /// </returns>
-        public abstract Task ProvideAggregatedData(IEnumerable<AggregatedDataPoint> aggregatedDataPoints);
+        public abstract Task ProvideCorrespondingAggregatedData(IEnumerable<AggregatedDataPoint> aggregatedDataPoints);
 
         /// <inheritdoc/>
         public IOrderedEnumerable<DataPointObservation> CreateOrderedEnumerable<TKey>(

@@ -104,7 +104,7 @@ namespace DAaVE.Storage.Azure
         }
 
         /// <inheritdoc/>
-        public override Task ProvideAggregatedData(IEnumerable<AggregatedDataPoint> aggregatedDataPoints)
+        public override Task ProvideCorrespondingAggregatedData(IEnumerable<AggregatedDataPoint> aggregatedDataPoints)
         {
             IEnumerable<IGrouping<string, AggregatedDataPointCloudTableEntity<TDataPointTypeEnum>>> aggregatedDataPointEntitiesByPartition = aggregatedDataPoints
                 .Select(p => new AggregatedDataPointCloudTableEntity<TDataPointTypeEnum>(this.seriesDataPointType, p, this.firehosePartitionKey))

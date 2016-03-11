@@ -86,7 +86,7 @@ namespace DAaVE.Library.DataAggregation
                                 consecutiveErrorCount = 0;
                             }
 
-                            uploadInProgress = pageOfUnaggregatedData.ProvideAggregatedData(aggregatedData);
+                            uploadInProgress = pageOfUnaggregatedData.ProvideCorrespondingAggregatedData(aggregatedData);
                         }
                     }
                 }

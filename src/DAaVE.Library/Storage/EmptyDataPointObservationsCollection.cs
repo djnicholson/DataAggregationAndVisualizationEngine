@@ -13,15 +13,10 @@ namespace DAaVE.Library.Storage
 
     /// <summary>
     /// Represents an empty (trivially consecutive) collection of raw data points.
-    /// Ignores any data provided to <see cref="ProvideAggregatedData(IEnumerable{AggregatedDataPoint})"/>.
+    /// Ignores any data provided to <see cref="ProvideCorrespondingAggregatedData(IEnumerable{AggregatedDataPoint})"/>.
     /// </summary>
     internal sealed class EmptyDataPointObservationsCollection : ConsecutiveDataPointObservationsCollection
     {
-        /// <summary>
-        /// A singleton instance.
-        /// </summary>
-        private static readonly EmptyDataPointObservationsCollection InstanceInternal = new EmptyDataPointObservationsCollection();
-
         /// <summary>
         /// A concrete implementation of an empty <see cref="IOrderedEnumerable{TElement}"/>.
         /// </summary>
@@ -29,7 +24,13 @@ namespace DAaVE.Library.Storage
             (new DataPointObservation[0]).OrderBy(_ => 0);
 
         /// <summary>
+        /// A singleton instance.
+        /// </summary>
+        private static readonly EmptyDataPointObservationsCollection InstanceInternal = new EmptyDataPointObservationsCollection();
+
+        /// <summary>
         /// Initializes a new instance of the EmptyDataPointObservationsCollection class.
+        /// Objects of this class are immutable and a static instance is available in <see cref="Instance"/>.
         /// </summary>
         public EmptyDataPointObservationsCollection() : base(EmptyArrayAsOrderedEnumerable)
         {
@@ -62,7 +63,7 @@ namespace DAaVE.Library.Storage
         /// </summary>
         /// <param name="aggregatedDataPoints">This parameter is not used.</param>
         /// <returns>A running (or already completed) no-op task.</returns>
-        public override Task ProvideAggregatedData(IEnumerable<AggregatedDataPoint> aggregatedDataPoints)
+        public override Task ProvideCorrespondingAggregatedData(IEnumerable<AggregatedDataPoint> aggregatedDataPoints)
         {
             return Task.Run(() => { });
         }

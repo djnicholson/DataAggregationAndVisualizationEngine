@@ -29,7 +29,7 @@ namespace DAaVE.Library.DataAggregation.Aggregators
                     p => TruncateToSecondsUtc(p.UtcTimestamp).Ticks == aggregateUtcTime.Ticks;
 
                 IEnumerable<DataPointObservation> pointsUnderConsideration = remainingPoints.TakeWhile(inAggregationWindow);
-                remainingPoints = remainingPoints.SkipWhile(p => !inAggregationWindow(p));
+                remainingPoints = remainingPoints.SkipWhile(inAggregationWindow);
 
                 yield return new AggregatedDataPoint()
                 {
