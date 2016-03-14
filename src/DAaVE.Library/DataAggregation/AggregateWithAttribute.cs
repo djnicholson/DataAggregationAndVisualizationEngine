@@ -49,7 +49,7 @@ namespace DAaVE.Library.DataAggregation
                 if (!value.GetInterfaces().Contains(typeof(IDataPointAggregator)))
                 {
                     throw new ArgumentException(
-                        "AggregatorImplementationmust inherit IDataPointAggregator, " + value + " does not", 
+                        "AggregatorType must inherit IDataPointAggregator, " + value + " does not", 
                         "value");
                 }
 
