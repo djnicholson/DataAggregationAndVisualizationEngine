@@ -22,6 +22,7 @@
   <ItemGroup>
     <Compile Include="AggregateWithAttributeUnitTests.cs" />
     <Compile Include="AverageBySecondDataPointAggregatorUnitTests.cs" />
+    <Compile Include="DataAggregationBackgroundWorkerFunctionalTests.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AggregatedDataPointUnitTests.cs" />
