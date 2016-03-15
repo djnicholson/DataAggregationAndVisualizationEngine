@@ -23,6 +23,7 @@
     <Compile Include="NoOpAggregator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SampleConsecutiveDataPointObservationsCollection.cs" />
+    <Compile Include="SampleDataPointPager.cs" />
     <Compile Include="SampleDataPointType.cs" />
   </ItemGroup>
   <ItemGroup>
