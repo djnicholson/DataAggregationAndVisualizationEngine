@@ -19,8 +19,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AggregationRequestEventArgs.cs" />
     <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="NoOpAggregator.cs" />
+    <Compile Include="SampleDataPointAggregator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SampleConsecutiveDataPointObservationsCollection.cs" />
     <Compile Include="SampleDataPointPager.cs" />

@@ -1,4 +1,4 @@
-﻿// <copyright file="NoOpAggregator.cs" company="David Nicholson">
+﻿// <copyright file="SampleDataPointAggregator.cs" company="David Nicholson">
 //     Copyright (c) David Nicholson. All rights reserved.
 // </copyright>
 // <summary>See class header.</summary>
@@ -16,10 +16,16 @@ namespace DAaVE.Samples
     /// <summary>
     /// A trivial implementation of <see cref="IDataPointAggregator"/>.
     /// </summary>
-    public sealed class NoOpAggregator : IDataPointAggregator
+    public sealed class SampleDataPointAggregator : IDataPointAggregator
     {
         /// <summary>
-        /// Outputs debug information about observations.
+        /// Event that fires whenever an aggregation is requested.
+        /// </summary>
+        public event EventHandler<AggregationRequestEventArgs> OnAggregate;
+
+        /// <summary>
+        /// Outputs debug information about observations and calls any registered event
+        /// handlers.
         /// </summary>
         /// <param name="continuousObservations">
         /// Each item will be passed to <see cref="Debug.WriteLine(object)"/>.
@@ -38,6 +44,13 @@ namespace DAaVE.Samples
             foreach (DataPointObservation dataPoint in continuousObservations)
             {
                 Debug.WriteLine(dataPoint);
+            }
+
+            EventHandler<AggregationRequestEventArgs> eventHandler = this.OnAggregate;
+            if (eventHandler != null)
+            {
+                Debug.WriteLine("Invoking event handler(s)...");
+                eventHandler(this, new AggregationRequestEventArgs(continuousObservations));
             }
 
             Debug.WriteLine("Success: NoOpAggregator.Aggregate");

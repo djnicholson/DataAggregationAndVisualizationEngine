@@ -26,8 +26,8 @@ namespace DAaVE.Library.Tests
         [TestMethod]
         public void AggregatorTypeIsSetByConstructor()
         {
-            AggregateWithAttribute target = new AggregateWithAttribute(typeof(NoOpAggregator));
-            Assert.AreEqual<Type>(typeof(NoOpAggregator), target.AggregatorType);
+            AggregateWithAttribute target = new AggregateWithAttribute(typeof(SampleDataPointAggregator));
+            Assert.AreEqual<Type>(typeof(SampleDataPointAggregator), target.AggregatorType);
         }
 
         /// <summary>
