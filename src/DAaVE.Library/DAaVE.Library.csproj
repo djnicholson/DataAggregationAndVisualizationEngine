@@ -35,6 +35,7 @@
     <Compile Include="DataCollection\Observation.cs" />
     <Compile Include="DataCollection\DataCollectorAttribute.cs" />
     <Compile Include="DataCollection\DataPointObservation.cs" />
+    <Compile Include="ErrorHandling\ErrorSinks\CallbackErrorSink.cs" />
     <Compile Include="ErrorHandling\ErrorSinks\ConsoleErrorSink.cs" />
     <Compile Include="ErrorHandling\IErrorSink.cs" />
     <Compile Include="GlobalSuppressions.cs" />
