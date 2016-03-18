@@ -8,6 +8,7 @@ namespace DAaVE.Samples
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
 
     using DAaVE.Library;
     using DAaVE.Library.DataAggregation;
@@ -19,9 +20,29 @@ namespace DAaVE.Samples
     public sealed class SampleDataPointAggregator : IDataPointAggregator
     {
         /// <summary>
-        /// Event that fires whenever an aggregation is requested.
+        /// A callback that can be invoked whenever an aggregation is requested to supply
+        /// appropriate aggregated data points.
         /// </summary>
-        public event EventHandler<AggregationRequestEventArgs> OnAggregate;
+        private Func<ConsecutiveDataPointObservationsCollection, IEnumerable<AggregatedDataPoint>> callback;
+
+        /// <summary>
+        /// Initializes a new instance of the SampleDataPointAggregator class.
+        /// </summary>
+        /// <param name="callback">
+        /// A callback that can be invoked whenever an aggregation is requested to supply
+        /// appropriate aggregated data points.
+        /// </param>
+        [SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures", Justification = "TODO")]
+        public SampleDataPointAggregator(
+            Func<ConsecutiveDataPointObservationsCollection, IEnumerable<AggregatedDataPoint>> callback)
+        {
+            if (callback == null)
+            {
+                throw new ArgumentNullException("callback");
+            }
+
+            this.callback = callback;
+        }
 
         /// <summary>
         /// Outputs debug information about observations and calls any registered event
@@ -46,16 +67,11 @@ namespace DAaVE.Samples
                 Debug.WriteLine(dataPoint);
             }
 
-            EventHandler<AggregationRequestEventArgs> eventHandler = this.OnAggregate;
-            if (eventHandler != null)
-            {
-                Debug.WriteLine("Invoking event handler(s)...");
-                eventHandler(this, new AggregationRequestEventArgs(continuousObservations));
-            }
+            IEnumerable<AggregatedDataPoint> result = this.callback(continuousObservations);
 
             Debug.WriteLine("Success: NoOpAggregator.Aggregate");
 
-            return new AggregatedDataPoint[0];
+            return result;
         }
     }
 }

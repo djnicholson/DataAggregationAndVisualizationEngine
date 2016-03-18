@@ -7,6 +7,7 @@ namespace DAaVE.Samples
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -20,6 +21,11 @@ namespace DAaVE.Samples
     public sealed class SampleConsecutiveDataPointObservationsCollection : ConsecutiveDataPointObservationsCollection
     {
         /// <summary>
+        /// Code to invoke if and when aggregated data is provided.
+        /// </summary>
+        private Action<IEnumerable<AggregatedDataPoint>> aggregationReceiver;
+
+        /// <summary>
         /// Backing store for <see cref="IsPartial"/>.
         /// </summary>
         private bool isPartial;
@@ -28,12 +34,16 @@ namespace DAaVE.Samples
         /// Initializes a new instance of the SampleConsecutiveDataPointObservationsCollection class.
         /// </summary>
         /// <param name="observations">The set of data point observations to represent.</param>
+        /// <param name="aggregationReceiver">Code to invoke if and when aggregated data is provided.</param>
         /// <param name="isPartial">Whether <paramref name="observations"/> is considered to be partial.</param>
+        [SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures", Justification = "TODO")]
         public SampleConsecutiveDataPointObservationsCollection(
             IOrderedEnumerable<DataPointObservation> observations,
+            Action<IEnumerable<AggregatedDataPoint>> aggregationReceiver,
             bool isPartial)
             : base(observations)
         {
+            this.aggregationReceiver = aggregationReceiver;
             this.isPartial = isPartial;
         }
 
@@ -53,7 +63,7 @@ namespace DAaVE.Samples
         /// <returns>A running (or already completed) no-op task.</returns>
         public override Task ProvideCorrespondingAggregatedData(IEnumerable<AggregatedDataPoint> aggregatedDataPoints)
         {
-            return Task.Run(() => { });
+            return Task.Run(() => this.aggregationReceiver(aggregatedDataPoints));
         }
     }
 }

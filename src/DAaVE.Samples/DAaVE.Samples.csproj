@@ -19,7 +19,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AggregationRequestEventArgs.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="SampleDataPointAggregator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

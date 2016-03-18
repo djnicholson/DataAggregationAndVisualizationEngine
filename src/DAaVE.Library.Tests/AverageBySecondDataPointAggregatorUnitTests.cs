@@ -113,7 +113,10 @@ namespace DAaVE.Library.Tests
             const bool DoesntMatter = true;
 
             ConsecutiveDataPointObservationsCollection aggregationInput =
-                new SampleConsecutiveDataPointObservationsCollection(dummyObservations, isPartial: DoesntMatter);
+                new SampleConsecutiveDataPointObservationsCollection(
+                    observations: dummyObservations, 
+                    aggregationReceiver: _ => Assert.Fail("ProvideCorrespondingAggregatedData should not be called"), 
+                    isPartial: DoesntMatter);
 
             AverageBySecondDataPointAggregator target = new AverageBySecondDataPointAggregator();
 
