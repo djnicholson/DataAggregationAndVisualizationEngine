@@ -41,10 +41,6 @@ namespace DAaVE.Library.Tests
         {
             using (DataAggregationBackgroundWorker<SampleDataPointType> target = this.NewTarget())
             {
-                // TODO: Add tests that do things like:
-                // this.ExpectPagerRequest(foo);
-                // this.ExpectAggregationRequest(foo, bar);
-                // ...
             }
         }
 

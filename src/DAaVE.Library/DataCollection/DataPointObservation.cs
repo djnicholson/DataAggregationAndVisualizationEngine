@@ -85,5 +85,14 @@ namespace DAaVE.Library
                 return this.Value.GetHashCode() + this.UtcTimestamp.GetHashCode();
             }
         }
+
+        /// <summary>
+        /// Returns a string useful for debugging.
+        /// </summary>
+        /// <returns>A string for debugging purposes.</returns>
+        public override string ToString()
+        {
+            return "DataPointObservation(" + this.UtcTimestamp + ", " + this.Value + ")";
+        }
     }
 }
