@@ -223,15 +223,15 @@ namespace DAaVE.Library.Tests
         /// to perform an aggregation. Fails the current test if more the <see cref="Timeout"/>
         /// elapses before this happens.
         /// </summary>
-        /// <param name="dataToReturn">Data to return to the target.</param>
+        /// <param name="response">Data to return to the target.</param>
         /// <returns>
         /// Un-aggregated data that was provided to the aggregator. Caller should validate that this
         /// was as expected.
         /// </returns>
-        private ConsecutiveDataPointObservationsCollection ExpectAggregationRequest(
-            IEnumerable<AggregatedDataPoint> dataToReturn)
+        private ConsecutiveDataPointObservationsCollection ExpectAggregationRequestResponse(
+            IEnumerable<AggregatedDataPoint> response)
         {
-            Assert.IsNotNull(dataToReturn);
+            Assert.IsNotNull(response);
 
             ConsecutiveDataPointObservationsCollection unaggregatedData = null;
 
@@ -239,10 +239,10 @@ namespace DAaVE.Library.Tests
                 () => 
                 {
                     unaggregatedData = WaitDequeue(this.aggregationRequests);
-                    this.aggregationResponses.Enqueue(dataToReturn);
+                    this.aggregationResponses.Enqueue(response);
                 },
                 "Awaiting invocation of the aggregator; planning to return: [",
-                dataToReturn,
+                response,
                 "]");
 
             Assert.IsNotNull(unaggregatedData);
