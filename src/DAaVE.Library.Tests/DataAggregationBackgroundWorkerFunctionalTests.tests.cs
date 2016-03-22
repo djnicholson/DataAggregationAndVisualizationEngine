@@ -76,7 +76,9 @@ namespace DAaVE.Library.Tests
         /// <returns>A new random <see cref="DateTime"/> of type <see cref="DateTimeKind.Utc"/>.</returns>
         private static DateTime NewRandomDateTimeUtc(Random r)
         {
-            return DateTime.SpecifyKind(DateTime.FromOADate(r.NextDouble()), kind: DateTimeKind.Utc);
+            return DateTime.SpecifyKind(
+                value: DateTime.FromOADate(r.NextDouble() * DateTime.MaxValue.ToOADate()),
+                kind: DateTimeKind.Utc);
         }
 
         /// <summary>
