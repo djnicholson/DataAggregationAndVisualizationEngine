@@ -92,7 +92,7 @@ namespace DAaVE.Library
         /// <returns>A string for debugging purposes.</returns>
         public override string ToString()
         {
-            return "DataPointObservation(" + this.UtcTimestamp + ", " + this.Value + ")";
+            return "(" + this.UtcTimestamp + ", " + this.Value + ")";
         }
     }
 }

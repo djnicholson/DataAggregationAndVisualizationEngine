@@ -9,6 +9,7 @@ namespace DAaVE.Samples
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
 
     using DAaVE.Library;
     using DAaVE.Library.DataAggregation;
@@ -55,21 +56,18 @@ namespace DAaVE.Samples
         public IEnumerable<AggregatedDataPoint> Aggregate(
             ConsecutiveDataPointObservationsCollection continuousObservations)
         {
-            Debug.WriteLine("Enter: NoOpAggregator.Aggregate");
+            Debug.WriteLine("Enter: SampleDataPointAggregator.Aggregate");
 
             if (continuousObservations == null)
             {
                 throw new ArgumentNullException("continuousObservations");
             }
 
-            foreach (DataPointObservation dataPoint in continuousObservations)
-            {
-                Debug.WriteLine(dataPoint);
-            }
+            Debug.WriteLine(string.Join(" ", continuousObservations.ToArray()));
 
             IEnumerable<AggregatedDataPoint> result = this.callback(continuousObservations);
 
-            Debug.WriteLine("Success: NoOpAggregator.Aggregate");
+            Debug.WriteLine("Success: SampleDataPointAggregator.Aggregate");
 
             return result;
         }
