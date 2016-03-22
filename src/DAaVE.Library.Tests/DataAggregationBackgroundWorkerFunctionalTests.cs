@@ -146,14 +146,21 @@ namespace DAaVE.Library.Tests
 
             using (Task worker = Task.Run(action))
             {
-                bool actionCompletedWithinTimeout = worker.Wait(Timeout);
-                if (!actionCompletedWithinTimeout)
+                try
                 {
-                    Assert.Fail(
-                        "An expectation within this test is not yet realized. The condition was first expected about " + Timeout +
-                        " ago though, so the test has been marked as 'failed' to ease identification of the specific expectation that may need" +
-                        " investigation. The stack trace of this failure will identify the location within the test-code that has the expectation" +
-                        " . The following context may be useful in further debugging: " + contextAsString);
+                    bool actionCompletedWithinTimeout = worker.Wait(Timeout);
+                    if (!actionCompletedWithinTimeout)
+                    {
+                        Assert.Fail(
+                            "An expectation within this test is not yet realized. The condition was first expected about " + Timeout +
+                            " ago though, so the test has been marked as 'failed' to ease identification of the specific expectation that may need" +
+                            " investigation. The stack trace of this failure will identify the location within the test-code that has the expectation" +
+                            " . The following context may be useful in further debugging: " + contextAsString);
+                    }
+                }
+                finally
+                {
+                    worker.Wait();
                 }
             }
 

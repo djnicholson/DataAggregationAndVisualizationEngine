@@ -7,6 +7,7 @@ namespace DAaVE.Library.Tests
 {
     using System;
     using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Threading;
 
@@ -27,7 +28,7 @@ namespace DAaVE.Library.Tests
         /// The maximum amount of time that each individual expectation must be realized within before
         /// the current test is marked as failed.
         /// </summary>
-        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(5.0);
+        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(15.0);
 
         /// <summary>
         /// Basic sanity test that an instance of <see cref="DataAggregationBackgroundWorker{TDataPointTypeEnum}"/> can successfully
@@ -70,6 +71,56 @@ namespace DAaVE.Library.Tests
         }
 
         /// <summary>
+        /// Confirms that empty pages being returned does not cause any failures (but does cause a delay
+        /// of approximately <see cref="DataAggregationOrchestrator.SleepDurationOnDataExhaustion"/> before
+        /// a re-query).
+        /// </summary>
+        [SuppressMessage(
+            "Microsoft.Globalization", 
+            "CA1303:Do not pass literals as localized parameters", 
+            MessageId = "DAaVE.Library.Tests.DataAggregationBackgroundWorkerFunctionalTests.AssertTimeSpanBetween(System.TimeSpan,System.TimeSpan,System.TimeSpan,System.String,System.Object[])",
+            Justification = "Proxied to Assert.IsTrue")]
+        [TestMethod]
+        public void EmptyPagesProvidedByPager()
+        {
+            using (DataAggregationBackgroundWorker<SampleDataPointType> target = this.NewTarget())
+            {
+                this.AssertSingleIteration(seed: 03211954);
+
+                this.AssertSingleIteration(seed: 03211955, noRawData: true);
+
+                Stopwatch stopwatch = Stopwatch.StartNew();
+
+                this.AssertSingleIteration(seed: 03211956);
+                AssertTimeSpanBetween(
+                    TimeSpan.FromSeconds(7.5), 
+                    stopwatch.Elapsed,
+                    TimeSpan.FromSeconds(12.5), 
+                    "Empty page did not cause expected delay. Expected: ~10 seconds; Actual: {0}", 
+                    stopwatch.Elapsed);
+            }
+        }
+
+        /// <summary>
+        /// Asserts that three <see cref="TimeSpan"/> values are strictly increasing.
+        /// </summary>
+        /// <param name="lowerBound">The lowest of the three values.</param>
+        /// <param name="mid">The middle value.</param>
+        /// <param name="upperBound">The highest of the three values.</param>
+        /// <param name="message">Message to use to describe a failure.</param>
+        /// <param name="parameters">String-format parameters for <paramref name="message"/>.</param>
+        private static void AssertTimeSpanBetween(
+            TimeSpan lowerBound,
+            TimeSpan mid,
+            TimeSpan upperBound,
+            string message,
+            params object[] parameters)
+        {
+            Assert.IsTrue(lowerBound < mid, message + " (lowerBound >= mid)", parameters);
+            Assert.IsTrue(mid < upperBound, message + " (mid >= upperBound)", parameters);
+        }
+
+        /// <summary>
         /// Generates a random date using the provided random number generator.
         /// </summary>
         /// <param name="r">Random number to generate.</param>
@@ -86,13 +137,19 @@ namespace DAaVE.Library.Tests
         /// <see cref="DataAggregationBackgroundWorker{TDataPointTypeEnum}"/>.  Returns when all
         /// expectations have been met.
         /// </summary>
-        /// <param name="seed">Seed to use for pseudo-random generation of sample data.</param>
-        private void AssertSingleIteration(int seed = 0)
+        /// <param name="noRawData">
+        /// Whether to simulate a situation where the page is returning empty pages.
+        /// </param>
+        /// <param name="seed">
+        /// Seed to use for pseudo-random generation of sample data.
+        /// </param>
+        private void AssertSingleIteration(bool noRawData = false, int seed = 0)
         {
             Random r = new Random(seed);
 
             // Use a non-empty sample data set with up to 50 raw data point observations:
-            DataPointObservation[] sampleRawData = new DataPointObservation[r.Next(1, 51)];
+            int sampleRawDataLength = noRawData ? 0 : r.Next(1, 51);
+            DataPointObservation[] sampleRawData = new DataPointObservation[sampleRawDataLength];
             for (int i = 0; i < sampleRawData.Length; i++)
             {
                 sampleRawData[i] = new DataPointObservation(NewRandomDateTimeUtc(r), value: r.NextDouble());
@@ -118,9 +175,15 @@ namespace DAaVE.Library.Tests
                         "Entire aggregation result should be sent verbatim to the original pager-supplied data set");
                     aggregationResultReceived.Set();
                 },
-                isPartial: false);
+                isPartial: r.Next(0, 2) == 1);
 
             this.ExpectPagerRequest(dataFromPager);
+
+            if (noRawData)
+            {
+                // The aggregator should not be called; this iteration is now complete.
+                return;
+            }
 
             ConsecutiveDataPointObservationsCollection dataProvidedToAggregator = this.ExpectAggregationRequestResponse(sampleAggregatedData);
 
