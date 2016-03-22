@@ -18,10 +18,11 @@ namespace DAaVE.Library.Tests
     using DAaVE.Samples;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-    
+
     /// <summary>
     /// Functional tests (make and depend on assumptions about the shared thread pool) for the 
     /// <see cref="DataAggregationBackgroundWorker{TDataPointTypeEnum}"/> class.
+    /// TODO: Don't use partial classes here; move the helper logic into a helper class to better hide it.
     /// </summary>
     public sealed partial class DataAggregationBackgroundWorkerFunctionalTests : IDisposable
     {

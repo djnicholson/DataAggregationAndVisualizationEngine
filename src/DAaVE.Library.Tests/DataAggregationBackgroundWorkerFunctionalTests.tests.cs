@@ -22,6 +22,7 @@ namespace DAaVE.Library.Tests
     /// <summary>
     /// Functional tests (make and depend on assumptions about the shared thread pool) for the 
     /// <see cref="DataAggregationBackgroundWorker{TDataPointTypeEnum}"/> class.
+    
     /// </summary>
     [TestClass]
     public partial class DataAggregationBackgroundWorkerFunctionalTests
