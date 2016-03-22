@@ -76,8 +76,8 @@ namespace DAaVE.Library.Tests
         /// a re-query).
         /// </summary>
         [SuppressMessage(
-            "Microsoft.Globalization", 
-            "CA1303:Do not pass literals as localized parameters", 
+            "Microsoft.Globalization",
+            "CA1303:Do not pass literals as localized parameters",
             MessageId = "DAaVE.Library.Tests.DataAggregationBackgroundWorkerFunctionalTests.AssertTimeSpanBetween(System.TimeSpan,System.TimeSpan,System.TimeSpan,System.String,System.Object[])",
             Justification = "Proxied to Assert.IsTrue")]
         [TestMethod]
@@ -94,12 +94,42 @@ namespace DAaVE.Library.Tests
                 this.AssertSingleIteration(seed: 03211956);
 
                 AssertTimeSpanBetween(
-                    TimeSpan.FromSeconds(7.5), 
+                    TimeSpan.FromSeconds(7.5),
                     stopwatch.Elapsed,
-                    TimeSpan.FromSeconds(12.5), 
-                    "Empty page did not cause expected delay. Expected: ~10 seconds; Actual: {0}", 
+                    TimeSpan.FromSeconds(12.5),
+                    "Empty page did not cause expected delay. Expected: ~10 seconds; Actual: {0}",
                     stopwatch.Elapsed);
             }
+        }
+
+        /// <summary>
+        /// Confirms that empty pages being returned does not cause a delay that is capable of blocking
+        /// disposal of the entire <see cref="DataAggregationBackgroundWorker{TDataPointTypeEnum}"/>
+        /// object.
+        /// </summary>
+        [SuppressMessage(
+            "Microsoft.Globalization",
+            "CA1303:Do not pass literals as localized parameters",
+            MessageId = "DAaVE.Library.Tests.DataAggregationBackgroundWorkerFunctionalTests.AssertTimeSpanBetween(System.TimeSpan,System.TimeSpan,System.TimeSpan,System.String,System.Object[])",
+            Justification = "Proxied to Assert.IsTrue")]
+        [TestMethod]
+        public void EmptyPagesProvidedByPagerDoNotInterruptShutdown()
+        {
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+            using (DataAggregationBackgroundWorker<SampleDataPointType> target = this.NewTarget())
+            {
+                this.AssertSingleIteration(seed: 03220849);
+
+                this.AssertSingleIteration(seed: 03220850, noRawData: true);    
+            }
+
+            AssertTimeSpanBetween(
+                TimeSpan.FromSeconds(0.0),
+                stopwatch.Elapsed,
+                TimeSpan.FromSeconds(0.5),
+                "Empty page delay should not block shutdown. This test took {0} which appears to have an unexpected delay",
+                stopwatch.Elapsed);
         }
 
         /// <summary>
