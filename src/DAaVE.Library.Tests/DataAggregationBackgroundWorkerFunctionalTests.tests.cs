@@ -150,6 +150,29 @@ namespace DAaVE.Library.Tests
         }
 
         /// <summary>
+        /// Asserts the correct concurrency model for aggregations (assumed to be CPU heavy) and
+        /// storage of aggregation results (assumed to be IO heavy). At most one aggregation is
+        /// allowed to happen concurrently, and at most one result storage operation can happen
+        /// concurrently, but it is acceptable for a single aggregation computation to happen 
+        /// simultaneously with the upload of the previous result.
+        /// </summary>
+        [TestMethod]
+        public void AggregationUploadConcurrency()
+        {
+            // TODO
+        }
+
+        /// <summary>
+        /// At most 20 consecutive exceptions are acceptable during aggregation (each one will
+        /// be reported to the error sink and cause a deliberate delay, but not stop the worker).
+        /// </summary>
+        [TestMethod]
+        public void ErrorHandling()
+        {
+            // TODO
+        }
+
+        /// <summary>
         /// Asserts that three <see cref="TimeSpan"/> values are strictly increasing.
         /// </summary>
         /// <param name="lowerBound">The lowest of the three values.</param>
