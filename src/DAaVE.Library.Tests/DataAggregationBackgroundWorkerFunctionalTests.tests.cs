@@ -133,6 +133,23 @@ namespace DAaVE.Library.Tests
         }
 
         /// <summary>
+        /// Confirms that empty aggregation results are acceptable (when there is a non-empty amount of raw data
+        /// point observations).
+        /// </summary>
+        [TestMethod]
+        public void EmptyAggregationResult()
+        {
+            using (DataAggregationBackgroundWorker<SampleDataPointType> target = this.NewTarget())
+            {
+                this.AssertSingleIteration(seed: 03220858);
+
+                this.AssertSingleIteration(seed: 03220859, noAggregatedData: true);
+
+                this.AssertSingleIteration(seed: 03220900);
+            }
+        }
+
+        /// <summary>
         /// Asserts that three <see cref="TimeSpan"/> values are strictly increasing.
         /// </summary>
         /// <param name="lowerBound">The lowest of the three values.</param>
@@ -169,12 +186,19 @@ namespace DAaVE.Library.Tests
         /// expectations have been met.
         /// </summary>
         /// <param name="noRawData">
-        /// Whether to simulate a situation where the page is returning empty pages.
+        /// Whether to simulate a situation where the pager is returning empty pages.
+        /// </param>
+        /// <param name="noAggregatedData">
+        /// Whether to simulate a situation where the aggregation of the data provided by the
+        /// pager consists of no aggregated data points.
         /// </param>
         /// <param name="seed">
         /// Seed to use for pseudo-random generation of sample data.
         /// </param>
-        private void AssertSingleIteration(bool noRawData = false, int seed = 0)
+        private void AssertSingleIteration(
+            bool noRawData = false,
+            bool noAggregatedData = false,
+            int seed = 0)
         {
             Random r = new Random(seed);
 
@@ -187,7 +211,8 @@ namespace DAaVE.Library.Tests
             }
 
             // Use a non-empty set with up to 50 points to represent the aggregation of the above data:
-            AggregatedDataPoint[] sampleAggregatedData = new AggregatedDataPoint[r.Next(1, 51)];
+            int sampleAggregatedDataLength = noAggregatedData ? 0 : r.Next(1, 51);
+            AggregatedDataPoint[] sampleAggregatedData = new AggregatedDataPoint[sampleAggregatedDataLength];
             for (int i = 0; i < sampleAggregatedData.Length; i++)
             {
                 sampleAggregatedData[i] = new AggregatedDataPoint();
@@ -221,6 +246,12 @@ namespace DAaVE.Library.Tests
             Assert.IsTrue(
                 dataProvidedToAggregator.SequenceEqual(sampleRawData.OrderBy(d => d.UtcTimestamp)),
                 "Entire pager output should be passed verbatim as a single data-set to the aggregator for aggregation");
+
+            if (noAggregatedData)
+            {
+                // No aggregation results to report.
+                return;
+            }
 
             aggregationResultReceived.Wait(Timeout);
             Assert.IsTrue(aggregationResultReceived.IsSet, "Aggregator results not provided to originating pager data object");
