@@ -192,6 +192,45 @@ namespace DAaVE.Library.Tests
         }
 
         /// <summary>
+        /// Generate predictable (based on test build) but seemingly random sample data for use in tests.
+        /// </summary>
+        /// <param name="seed">
+        /// Seed. A constant seed will produce consistent results. A small change in the seed used should produce massively 
+        /// different results.</param>
+        /// <param name="sampleRawDataMaximumLength">Amount of data point observations. Can be zero.</param>
+        /// <param name="sampleAggregatedDataMaximumLength">Amount of aggregated data points. Can be zero.</param>
+        /// <param name="sampleRawData">Will be populated with sample raw data point observations.</param>
+        /// <param name="sampleAggregatedData">Will be populated with aggregated data points.</param>
+        /// <returns>Whether or not to consider the sample raw data a partial page.</returns>
+        private static bool GenerateSampleData(
+            int seed,
+            int sampleRawDataMaximumLength,
+            int sampleAggregatedDataMaximumLength,
+            out DataPointObservation[] sampleRawData,
+            out AggregatedDataPoint[] sampleAggregatedData)
+        {
+            Random psuedoRandomNumberGenerator = new Random(seed);
+
+            int sampleRawDataLength = sampleRawDataMaximumLength == 0 ? 0 : psuedoRandomNumberGenerator.Next(1, sampleRawDataMaximumLength + 1);
+            sampleRawData = new DataPointObservation[sampleRawDataLength];
+            for (int i = 0; i < sampleRawData.Length; i++)
+            {
+                sampleRawData[i] = new DataPointObservation(NewRandomDateTimeUtc(psuedoRandomNumberGenerator), value: psuedoRandomNumberGenerator.NextDouble());
+            }
+
+            int sampleAggregatedDataLength = sampleAggregatedDataMaximumLength == 0 ? 0 : psuedoRandomNumberGenerator.Next(1, sampleAggregatedDataMaximumLength + 1);
+            sampleAggregatedData = new AggregatedDataPoint[sampleAggregatedDataLength];
+            for (int i = 0; i < sampleAggregatedData.Length; i++)
+            {
+                sampleAggregatedData[i] = new AggregatedDataPoint();
+                sampleAggregatedData[i].UtcTimestamp = NewRandomDateTimeUtc(psuedoRandomNumberGenerator);
+                sampleAggregatedData[i].AggregatedValue = psuedoRandomNumberGenerator.NextDouble();
+            }
+
+            return psuedoRandomNumberGenerator.NextDouble() < 0.5;
+        }
+
+        /// <summary>
         /// Generates a random date using the provided random number generator.
         /// </summary>
         /// <param name="r">Random number to generate.</param>
@@ -215,33 +254,34 @@ namespace DAaVE.Library.Tests
         /// Whether to simulate a situation where the aggregation of the data provided by the
         /// pager consists of no aggregated data points.
         /// </param>
+        /// <param name="exceptionFromPager">
+        /// Exception to throw from within the pager when asked to retrieve raw data point observations.
+        /// </param>
+        /// <param name="exceptionFromAggregator">
+        /// Exception to throw from within the aggregator when asked to aggregate raw data point observations.
+        /// </param>
+        /// <param name="exceptionWhenPersistingAggregation">
+        /// Exception to throw when asked to persist aggregation results.
+        /// </param>
         /// <param name="seed">
         /// Seed to use for pseudo-random generation of sample data.
         /// </param>
         private void AssertSingleIteration(
             bool noRawData = false,
             bool noAggregatedData = false,
+            Exception exceptionFromPager = null,
+            Exception exceptionFromAggregator = null,
+            Exception exceptionWhenPersistingAggregation = null,
             int seed = 0)
         {
-            Random r = new Random(seed);
-
-            // Use a non-empty sample data set with up to 50 raw data point observations:
-            int sampleRawDataLength = noRawData ? 0 : r.Next(1, 51);
-            DataPointObservation[] sampleRawData = new DataPointObservation[sampleRawDataLength];
-            for (int i = 0; i < sampleRawData.Length; i++)
-            {
-                sampleRawData[i] = new DataPointObservation(NewRandomDateTimeUtc(r), value: r.NextDouble());
-            }
-
-            // Use a non-empty set with up to 50 points to represent the aggregation of the above data:
-            int sampleAggregatedDataLength = noAggregatedData ? 0 : r.Next(1, 51);
-            AggregatedDataPoint[] sampleAggregatedData = new AggregatedDataPoint[sampleAggregatedDataLength];
-            for (int i = 0; i < sampleAggregatedData.Length; i++)
-            {
-                sampleAggregatedData[i] = new AggregatedDataPoint();
-                sampleAggregatedData[i].UtcTimestamp = NewRandomDateTimeUtc(r);
-                sampleAggregatedData[i].AggregatedValue = r.NextDouble();
-            }
+            DataPointObservation[] sampleRawData;
+            AggregatedDataPoint[] sampleAggregatedData;
+            bool isPartial = GenerateSampleData(
+                seed: seed,
+                sampleRawDataMaximumLength: noRawData ? 0 : 50,
+                sampleAggregatedDataMaximumLength: noAggregatedData ? 0 : 50,
+                sampleRawData: out sampleRawData,
+                sampleAggregatedData: out sampleAggregatedData);
 
             ManualResetEventSlim aggregationResultReceived = new ManualResetEventSlim(false);
 
@@ -253,24 +293,47 @@ namespace DAaVE.Library.Tests
                         aggregationResult.SequenceEqual(sampleAggregatedData),
                         "Entire aggregation result should be sent verbatim to the original pager-supplied data set");
                     aggregationResultReceived.Set();
+                    if (exceptionWhenPersistingAggregation != null)
+                    {
+                        throw exceptionWhenPersistingAggregation;
+                    }
                 },
-                isPartial: r.Next(0, 2) == 1);
+                isPartial);
 
-            this.ExpectPagerRequest(dataFromPager);
+            bool expectedPagerFailure = exceptionFromPager != null;
+            if (expectedPagerFailure)
+            {
+                this.ExpectPagerRequest(exceptionToThrow: exceptionFromPager);
+                this.ExpectError("FOO", exceptionFromPager.GetType());
+            }
+            else
+            {
+                this.ExpectPagerRequest(dataToReturn: dataFromPager);
+            }
 
-            if (noRawData)
+            if (noRawData || expectedPagerFailure)
             {
                 // The aggregator should not be called; this iteration is now complete.
                 return;
             }
 
-            ConsecutiveDataPointObservationsCollection dataProvidedToAggregator = this.ExpectAggregationRequestResponse(sampleAggregatedData);
+            ConsecutiveDataPointObservationsCollection dataProvidedToAggregator;
+            bool expectAggregationToFail = exceptionFromAggregator != null;
+            if (expectAggregationToFail)
+            {
+                dataProvidedToAggregator = this.ExpectAggregationRequestResponse(exceptionToThrow: exceptionFromAggregator);
+                this.ExpectError("FOO", exceptionFromAggregator.GetType());
+            }
+            else
+            {
+                dataProvidedToAggregator = this.ExpectAggregationRequestResponse(response: sampleAggregatedData);
+            }
 
             Assert.IsTrue(
                 dataProvidedToAggregator.SequenceEqual(sampleRawData.OrderBy(d => d.UtcTimestamp)),
                 "Entire pager output should be passed verbatim as a single data-set to the aggregator for aggregation");
 
-            if (noAggregatedData)
+            if (noAggregatedData || expectAggregationToFail)
             {
                 // No aggregation results to report.
                 return;
@@ -278,6 +341,13 @@ namespace DAaVE.Library.Tests
 
             aggregationResultReceived.Wait(Timeout);
             Assert.IsTrue(aggregationResultReceived.IsSet, "Aggregator results not provided to originating pager data object");
+
+            if (exceptionWhenPersistingAggregation != null)
+            {
+                this.ExpectError(
+                    "Exception when aggregating page of data of type: " + ArbitraryDataPointType,
+                    exceptionWhenPersistingAggregation.GetType());
+            }
         }
     }
 }

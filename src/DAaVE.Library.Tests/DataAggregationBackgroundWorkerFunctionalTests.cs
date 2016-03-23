@@ -229,6 +229,35 @@ namespace DAaVE.Library.Tests
         }
 
         /// <summary>
+        /// Block until a request has been made to the pager for a page of data. Fails the current test 
+        /// if more the <see cref="Timeout"/> elapses before this happens.
+        /// </summary>
+        /// <param name="exceptionToThrow">Exception to throw when the page is requested.</param>
+        private void ExpectPagerRequest(Exception exceptionToThrow)
+        {
+            Assert.IsNotNull(exceptionToThrow);
+
+            RunWithTimeout(
+                () =>
+                {
+                    ManualResetEventSlim invoked = new ManualResetEventSlim(initialState: false);
+
+                    this.pager.QueueObservation(
+                        ArbitraryDataPointType,
+                        () =>
+                        {
+                            invoked.Set();
+                            throw exceptionToThrow;
+                        });
+
+                    invoked.Wait();
+                },
+                "Awaiting invocation of the pager; planning to throw: [",
+                exceptionToThrow,
+                "]");
+        }
+
+        /// <summary>
         /// Block until a request has been made by one of the created targets to the aggregator
         /// to perform an aggregation. Fails the current test if more the <see cref="Timeout"/>
         /// elapses before this happens.
@@ -253,6 +282,37 @@ namespace DAaVE.Library.Tests
                 },
                 "Awaiting invocation of the aggregator; planning to return: [",
                 response,
+                "]");
+
+            Assert.IsNotNull(unaggregatedData);
+
+            return unaggregatedData;
+        }
+
+        /// <summary>
+        /// Block until a request has been made by one of the created targets to the aggregator
+        /// to perform an aggregation. Fails the current test if more the <see cref="Timeout"/>
+        /// elapses before this happens.
+        /// </summary>
+        /// <param name="exceptionToThrow">Exception to throw when aggregation is requested.</param>
+        /// <returns>
+        /// Un-aggregated data that was provided to the aggregator. Caller should validate that this
+        /// was as expected.
+        /// </returns>
+        private ConsecutiveDataPointObservationsCollection ExpectAggregationRequestResponse(Exception exceptionToThrow)
+        {
+            Assert.IsNotNull(exceptionToThrow);
+
+            ConsecutiveDataPointObservationsCollection unaggregatedData = null;
+
+            RunWithTimeout(
+                () =>
+                {
+                    unaggregatedData = WaitDequeue(this.aggregationRequests);
+                    throw exceptionToThrow;
+                },
+                "Awaiting invocation of the aggregator; planning to throw: [",
+                exceptionToThrow,
                 "]");
 
             Assert.IsNotNull(unaggregatedData);

@@ -47,8 +47,6 @@ namespace DAaVE.Library.DataAggregation
             IDataPointPager<TDataPointTypeEnum> pager,
             IErrorSink errorSink)
         {
-            object continuationTokenCurrent = null;
-
             int consecutiveErrorCount = 0;
 
             Task.Run(async () =>
@@ -92,7 +90,7 @@ namespace DAaVE.Library.DataAggregation
                 }
                 catch (Exception e)
                 {
-                    string activityDescription = "aggregating page of data of type: " + type + "@" + continuationTokenCurrent;
+                    string activityDescription = "aggregating page of data of type: " + type;
 
                     errorSink.OnError("Exception when " + activityDescription, e);
 
