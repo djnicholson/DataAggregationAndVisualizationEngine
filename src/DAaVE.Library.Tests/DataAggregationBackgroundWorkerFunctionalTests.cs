@@ -34,7 +34,7 @@ namespace DAaVE.Library.Tests
         /// <summary>
         /// Pager used throughout tests.
         /// </summary>
-        private readonly SampleDataPointPager<SampleDataPointType> pager;
+        private readonly PagerWrapper pager;
 
         /// <summary>
         /// Aggregator used throughout tests.
@@ -57,6 +57,11 @@ namespace DAaVE.Library.Tests
         private ConcurrentQueue<Tuple<string, Type>> expectedErrors;
 
         /// <summary>
+        /// Verifications to perform (on the main test thread) after the test completes.
+        /// </summary>
+        private ConcurrentQueue<Action> postTestVerifications;
+
+        /// <summary>
         /// Error sink used throughout tests.
         /// </summary>
         private CallbackErrorSink errorSink;
@@ -66,7 +71,7 @@ namespace DAaVE.Library.Tests
         /// </summary>
         public DataAggregationBackgroundWorkerFunctionalTests()
         {
-            this.pager = new SampleDataPointPager<SampleDataPointType>();
+            this.pager = new PagerWrapper();
 
             this.aggregator = new SampleDataPointAggregator(aggregationRequest =>
             {
@@ -81,12 +86,15 @@ namespace DAaVE.Library.Tests
 
                 Tuple<string, Type> expectedError = WaitDequeue(this.expectedErrors);
 
-                Assert.AreEqual(expectedError.Item1, message);
-                Assert.AreEqual(expectedError.Item2 != null, hasException);
-                if (hasException)
-                {
-                    Assert.AreEqual(expectedError.Item2, exception.GetType());
-                }
+                postTestVerifications.Enqueue(() => 
+                { 
+                    Assert.AreEqual(expectedError.Item1, message);
+                    Assert.AreEqual(expectedError.Item2 != null, hasException);
+                    if (hasException)
+                    {
+                        Assert.AreEqual(expectedError.Item2, exception.GetType());
+                    }
+                });
             });
         }
 
@@ -101,6 +109,8 @@ namespace DAaVE.Library.Tests
             this.aggregationResponses = new ConcurrentQueue<IEnumerable<AggregatedDataPoint>>();
 
             this.expectedErrors = new ConcurrentQueue<Tuple<string, Type>>();
+
+            this.postTestVerifications = new ConcurrentQueue<Action>();
         }
 
         /// <summary>
@@ -109,6 +119,12 @@ namespace DAaVE.Library.Tests
         [TestCleanup]
         public void AfterIndividualTest()
         {
+            Action postTestVerification;
+            while (this.postTestVerifications.TryDequeue(out postTestVerification))
+            {
+                postTestVerification();
+            }
+
             Assert.AreEqual(0, this.aggregationRequests.Count, "An expected aggregation request did not happen");
             Assert.AreEqual(0, this.aggregationResponses.Count, "An aggregation request was not responded to as requested by the test");
             Assert.AreEqual(0, this.expectedErrors.Count, "An expected error did not happen");
@@ -213,13 +229,11 @@ namespace DAaVE.Library.Tests
                 {
                     ManualResetEventSlim success = new ManualResetEventSlim(initialState: false);
 
-                    this.pager.QueueObservation(
-                        ArbitraryDataPointType, 
-                        () =>
-                        {
-                            success.Set();
-                            return dataToReturn;
-                        });
+                    this.pager.ExpectRequestForPageOfObservations(() =>
+                    {
+                        success.Set();
+                        return dataToReturn;
+                    });
 
                     success.Wait();
                 },
@@ -242,13 +256,11 @@ namespace DAaVE.Library.Tests
                 {
                     ManualResetEventSlim invoked = new ManualResetEventSlim(initialState: false);
 
-                    this.pager.QueueObservation(
-                        ArbitraryDataPointType,
-                        () =>
-                        {
-                            invoked.Set();
-                            throw exceptionToThrow;
-                        });
+                    this.pager.ExpectRequestForPageOfObservations(() =>
+                    {
+                        invoked.Set();
+                        throw exceptionToThrow;
+                    });
 
                     invoked.Wait();
                 },
@@ -321,18 +333,65 @@ namespace DAaVE.Library.Tests
         }
 
         /// <summary>
-        /// Blocks until the error sink receives an error (then verifies the contents of the error).
-        /// Fails the current test if more the <see cref="Timeout"/> elapses before this happens.
+        /// Registers an expected upcoming error condition (and verifies the contents of the error
+        /// when it happens). Fails the current test if the error was not observed at the end of the test.
         /// </summary>
         /// <param name="errorMessage">The expected error message.</param>
         /// <param name="exceptionType">
         /// The type of exception expected (or null if the error should not have an associated exception).
         /// </param>
-        private void ExpectError(string errorMessage, Type exceptionType)
+        private void PushError(string errorMessage, Type exceptionType)
         {
             Assert.IsNotNull(errorMessage);
 
             this.expectedErrors.Enqueue(new Tuple<string, Type>(errorMessage, exceptionType));
+        }
+
+        /// <summary>
+        /// Wraps a <see cref="SampleDataPointPager{TDataPointTypeEnum}"/> but guarantees a fixed value
+        /// be returned from <see cref="ToString"/>.
+        /// </summary>
+        private sealed class PagerWrapper : IDataPointPager<SampleDataPointType>, IDisposable
+        {
+            /// <summary>
+            /// A fixed string used by <see cref="ToString"/>.
+            /// </summary>
+            public const string FixedToStringValue = "PagerWrapper.FixedToStringValue";
+
+            /// <summary>
+            /// The pager being wrapped.
+            /// </summary>
+            private readonly SampleDataPointPager<SampleDataPointType> pager = new SampleDataPointPager<SampleDataPointType>();
+
+            /// <inheritdoc/>
+            public void Dispose()
+            {
+                this.pager.Dispose();
+            }
+
+            /// <summary>
+            /// Register an expectation for a request and provide code to handle that request when it arrives.
+            /// </summary>
+            /// <param name="handler">Code to handle the expected request.</param>
+            public void ExpectRequestForPageOfObservations(Func<ConsecutiveDataPointObservationsCollection> handler)
+            {
+                this.pager.QueueObservation(ArbitraryDataPointType, handler);
+            }
+
+            /// <inheritdoc/>
+            public Task<ConsecutiveDataPointObservationsCollection> GetPageOfObservations(SampleDataPointType type)
+            {
+                return this.pager.GetPageOfObservations(type);
+            }
+
+            /// <summary>
+            /// Always returns <see cref="FixedToStringValue"/>.
+            /// </summary>
+            /// <returns>The value of <see cref="FixedToStringValue"/>.</returns>
+            public override string ToString()
+            {
+                return FixedToStringValue;
+            }
         }
     }
 }

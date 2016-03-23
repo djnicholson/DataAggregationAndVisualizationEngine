@@ -10,16 +10,17 @@ namespace DAaVE.Library.Tests
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Threading;
+    using System.Threading.Tasks;
 
     using DAaVE.Library.DataAggregation;
     using DAaVE.Library.Storage;
     using DAaVE.Samples;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-    
+
     /// <summary>
-    /// Functional tests (make and depend on assumptions about the shared thread pool) for the 
-    /// <see cref="DataAggregationBackgroundWorker{TDataPointTypeEnum}"/> class.
+    /// Functional (make and depend on assumptions about the shared thread pool and availability of CPU for test
+    /// code execution) tests for the <see cref="DataAggregationBackgroundWorker{TDataPointTypeEnum}"/> class.
     /// </summary>
     [TestClass]
     public partial class DataAggregationBackgroundWorkerFunctionalTests
@@ -94,10 +95,10 @@ namespace DAaVE.Library.Tests
                 this.AssertSingleIteration(seed: 03211956);
 
                 AssertTimeSpanBetween(
-                    TimeSpan.FromSeconds(7.5),
+                    TimeSpan.FromSeconds(3.0),
                     stopwatch.Elapsed,
-                    TimeSpan.FromSeconds(12.5),
-                    "Empty page did not cause expected delay. Expected: ~10 seconds; Actual: {0}",
+                    TimeSpan.FromSeconds(7.5),
+                    "Empty page did not cause expected delay. Expected: ~5 seconds; Actual: {0}",
                     stopwatch.Elapsed);
             }
         }
@@ -131,6 +132,68 @@ namespace DAaVE.Library.Tests
                 "Empty page delay should not block shutdown. This test took {0} which appears to have an unexpected delay",
                 stopwatch.Elapsed);
         }
+
+        /// <summary>
+        /// Confirms that individual exceptions from the pager do not cause any failures (but do cause a delay
+        /// of approximately <see cref="DataAggregationOrchestrator.SleepDurationOnError"/> before a re-query).
+        /// </summary>
+        [SuppressMessage(
+            "Microsoft.Globalization",
+            "CA1303:Do not pass literals as localized parameters",
+            MessageId = "DAaVE.Library.Tests.DataAggregationBackgroundWorkerFunctionalTests.AssertTimeSpanBetween(System.TimeSpan,System.TimeSpan,System.TimeSpan,System.String,System.Object[])",
+            Justification = "Proxied to Assert.IsTrue")]
+        [TestMethod]
+        public void ErrorFromPager()
+        {
+            using (DataAggregationBackgroundWorker<SampleDataPointType> target = this.NewTarget())
+            {
+                this.AssertSingleIteration(seed: 03221825);
+
+                this.AssertSingleIteration(seed: 03221826, expectPagerToFail: true);
+
+                Stopwatch stopwatch = Stopwatch.StartNew();
+
+                this.AssertSingleIteration(seed: 03221827);
+
+                AssertTimeSpanBetween(
+                    TimeSpan.FromSeconds(7.5),
+                    stopwatch.Elapsed,
+                    TimeSpan.FromSeconds(12.5),
+                    "Exception did not cause expected delay. Expected: ~10 seconds; Actual: {0}",
+                    stopwatch.Elapsed);
+            }
+        }
+
+        // TODO: Fix.
+        /////// <summary>
+        /////// Confirms that exceptions thrown by the pager do not cause a delay that is capable of blocking
+        /////// disposal of the entire <see cref="DataAggregationBackgroundWorker{TDataPointTypeEnum}"/>
+        /////// object.
+        /////// </summary>
+        ////[SuppressMessage(
+        ////    "Microsoft.Globalization",
+        ////    "CA1303:Do not pass literals as localized parameters",
+        ////    MessageId = "DAaVE.Library.Tests.DataAggregationBackgroundWorkerFunctionalTests.AssertTimeSpanBetween(System.TimeSpan,System.TimeSpan,System.TimeSpan,System.String,System.Object[])",
+        ////    Justification = "Proxied to Assert.IsTrue")]
+        ////[TestMethod]
+        ////public void ErrorFromPagerDoesNotInterruptShutdown()
+        ////{
+        ////    Stopwatch stopwatch = Stopwatch.StartNew();
+
+        ////    using (DataAggregationBackgroundWorker<SampleDataPointType> target = this.NewTarget())
+        ////    {
+        ////        this.AssertSingleIteration(seed: 03220849);
+
+        ////        this.AssertSingleIteration(seed: 03220850, expectPagerToFail: true);
+        ////    }
+
+        ////    AssertTimeSpanBetween(
+        ////        TimeSpan.FromSeconds(0.0),
+        ////        stopwatch.Elapsed,
+        ////        TimeSpan.FromSeconds(0.5),
+        ////        "Pager exceptions should not block shutdown. This test took {0} which appears to have an unexpected delay",
+        ////        stopwatch.Elapsed);
+        ////}
 
         /// <summary>
         /// Confirms that empty aggregation results are acceptable (when there is a non-empty amount of raw data
@@ -254,14 +317,14 @@ namespace DAaVE.Library.Tests
         /// Whether to simulate a situation where the aggregation of the data provided by the
         /// pager consists of no aggregated data points.
         /// </param>
-        /// <param name="exceptionFromPager">
-        /// Exception to throw from within the pager when asked to retrieve raw data point observations.
+        /// <param name="expectPagerToFail">
+        /// Whether to throw an exception from within the pager when asked to retrieve raw data point observations.
         /// </param>
-        /// <param name="exceptionFromAggregator">
-        /// Exception to throw from within the aggregator when asked to aggregate raw data point observations.
+        /// <param name="expectAggregationToFail">
+        /// Whether to throw an exception from within the aggregator when asked to aggregate raw data point observations.
         /// </param>
-        /// <param name="exceptionWhenPersistingAggregation">
-        /// Exception to throw when asked to persist aggregation results.
+        /// <param name="expectFailureStoringResults">
+        /// Whether to throw an exception when asked to persist aggregation results.
         /// </param>
         /// <param name="seed">
         /// Seed to use for pseudo-random generation of sample data.
@@ -269,11 +332,31 @@ namespace DAaVE.Library.Tests
         private void AssertSingleIteration(
             bool noRawData = false,
             bool noAggregatedData = false,
-            Exception exceptionFromPager = null,
-            Exception exceptionFromAggregator = null,
-            Exception exceptionWhenPersistingAggregation = null,
+            bool expectPagerToFail = false,
+            bool expectAggregationToFail = false,
+            bool expectFailureStoringResults = false,
             int seed = 0)
         {
+            string errorMessage = 
+                "Exception during aggregation of " + ArbitraryDataPointType + " data from PagerWrapper.FixedToStringValue" + 
+                " using DAaVE.Samples.SampleDataPointAggregator";
+
+            if (expectPagerToFail)
+            {
+                this.PushError(errorMessage, typeof(FormatException));
+                Assert.IsFalse(expectAggregationToFail, "Aggregation won't happen, so cannot fail.");
+                Assert.IsFalse(expectFailureStoringResults, "Result storage won't happen, so cannot fail.");
+            }
+            else if (expectAggregationToFail)
+            {
+                this.PushError("FOO", typeof(DivideByZeroException));
+                Assert.IsFalse(expectFailureStoringResults, "Result storage won't happen, so cannot fail.");
+            }
+            else if (expectFailureStoringResults)
+            {
+                this.PushError("FOO", typeof(MissingMemberException));
+            }
+
             DataPointObservation[] sampleRawData;
             AggregatedDataPoint[] sampleAggregatedData;
             bool isPartial = GenerateSampleData(
@@ -283,51 +366,41 @@ namespace DAaVE.Library.Tests
                 sampleRawData: out sampleRawData,
                 sampleAggregatedData: out sampleAggregatedData);
 
-            ManualResetEventSlim aggregationResultReceived = new ManualResetEventSlim(false);
-
-            SampleConsecutiveDataPointObservationsCollection dataFromPager = new SampleConsecutiveDataPointObservationsCollection(
+            ManualResetEventSlim aggregationResultReceivedByPagerDataObject = new ManualResetEventSlim(false);
+            SampleConsecutiveDataPointObservationsCollection dataObjectFromPager = new SampleConsecutiveDataPointObservationsCollection(
                 sampleRawData.OrderBy(d => d.UtcTimestamp),
                 aggregationResult =>
                 {
                     Assert.IsTrue(
                         aggregationResult.SequenceEqual(sampleAggregatedData),
                         "Entire aggregation result should be sent verbatim to the original pager-supplied data set");
-                    aggregationResultReceived.Set();
-                    if (exceptionWhenPersistingAggregation != null)
+                    aggregationResultReceivedByPagerDataObject.Set();
+                    if (expectFailureStoringResults)
                     {
-                        throw exceptionWhenPersistingAggregation;
+                        throw new MissingMemberException();
                     }
                 },
                 isPartial);
 
-            bool expectedPagerFailure = exceptionFromPager != null;
-            if (expectedPagerFailure)
+            if (expectPagerToFail)
             {
-                this.ExpectPagerRequest(exceptionToThrow: exceptionFromPager);
-                this.ExpectError("FOO", exceptionFromPager.GetType());
+                this.ExpectPagerRequest(exceptionToThrow: new FormatException());
             }
             else
             {
-                this.ExpectPagerRequest(dataToReturn: dataFromPager);
+                this.ExpectPagerRequest(dataToReturn: dataObjectFromPager);
             }
 
-            if (noRawData || expectedPagerFailure)
+            if (noRawData || expectPagerToFail)
             {
                 // The aggregator should not be called; this iteration is now complete.
                 return;
             }
 
-            ConsecutiveDataPointObservationsCollection dataProvidedToAggregator;
-            bool expectAggregationToFail = exceptionFromAggregator != null;
-            if (expectAggregationToFail)
-            {
-                dataProvidedToAggregator = this.ExpectAggregationRequestResponse(exceptionToThrow: exceptionFromAggregator);
-                this.ExpectError("FOO", exceptionFromAggregator.GetType());
-            }
-            else
-            {
-                dataProvidedToAggregator = this.ExpectAggregationRequestResponse(response: sampleAggregatedData);
-            }
+            ConsecutiveDataPointObservationsCollection dataProvidedToAggregator = 
+                expectAggregationToFail ?
+                    this.ExpectAggregationRequestResponse(exceptionToThrow: new DivideByZeroException()) :
+                    this.ExpectAggregationRequestResponse(response: sampleAggregatedData);
 
             Assert.IsTrue(
                 dataProvidedToAggregator.SequenceEqual(sampleRawData.OrderBy(d => d.UtcTimestamp)),
@@ -339,15 +412,8 @@ namespace DAaVE.Library.Tests
                 return;
             }
 
-            aggregationResultReceived.Wait(Timeout);
-            Assert.IsTrue(aggregationResultReceived.IsSet, "Aggregator results not provided to originating pager data object");
-
-            if (exceptionWhenPersistingAggregation != null)
-            {
-                this.ExpectError(
-                    "Exception when aggregating page of data of type: " + ArbitraryDataPointType,
-                    exceptionWhenPersistingAggregation.GetType());
-            }
+            aggregationResultReceivedByPagerDataObject.Wait(Timeout);
+            Assert.IsTrue(aggregationResultReceivedByPagerDataObject.IsSet, "Aggregator results not provided to originating pager data object");
         }
     }
 }

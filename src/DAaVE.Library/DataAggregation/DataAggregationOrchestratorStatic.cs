@@ -17,11 +17,11 @@ namespace DAaVE.Library.DataAggregation
         /// <summary>
         /// Pagers will be polled this often for the next page of data.
         /// </summary>
-        public static readonly TimeSpan SleepDurationOnDataExhaustion = TimeSpan.FromSeconds(10.0);
+        public static readonly TimeSpan SleepDurationOnDataExhaustion = TimeSpan.FromSeconds(5.0);
 
         /// <summary>
         /// Time aggregation will sleep for upon an error.
         /// </summary>
-        public static readonly TimeSpan SleepDurationOnError = TimeSpan.FromMinutes(0.5);
+        public static readonly TimeSpan SleepDurationOnError = TimeSpan.FromSeconds(10.0);
     }
 }

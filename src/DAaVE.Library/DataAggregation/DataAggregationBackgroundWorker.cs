@@ -7,7 +7,7 @@
     "Microsoft.Design",
     "CA1031:DoNotCatchGeneralExceptionTypes",
     Scope = "member",
-    Target = "DAaVE.Library.DataAggregation.DataAggregationBackgroundWorker`1+<>c__DisplayClass1_1+<<-ctor>b__0>d.#MoveNext()",
+    Target = "DAaVE.Library.DataAggregation.DataAggregationBackgroundWorker`1+<>c__DisplayClass2_1+<<-ctor>b__0>d.#MoveNext()",
     Justification = "After a contiguous sequence of exceptional aggregations, an exception will be re-thrown.")]
 
 namespace DAaVE.Library.DataAggregation
@@ -32,7 +32,12 @@ namespace DAaVE.Library.DataAggregation
         /// <summary>
         /// Indicates that aggregation should now cease.
         /// </summary>
-        private ManualResetEventSlim shutdownStart = new ManualResetEventSlim(false);
+        private readonly ManualResetEventSlim shutdownStart;
+
+        /// <summary>
+        /// Task performing continuous aggregations.
+        /// </summary>
+        private readonly Task worker;
 
         /// <summary>
         /// Initializes a new instance of the DataAggregationBackgroundWorker class.
@@ -49,13 +54,15 @@ namespace DAaVE.Library.DataAggregation
         {
             int consecutiveErrorCount = 0;
 
-            Task.Run(async () =>
-            {
-                try
-                {
-                    Task uploadInProgress = null;
+            this.shutdownStart = new ManualResetEventSlim(initialState: false);
 
-                    while (true)
+            this.worker = Task.Run(async () =>
+            {
+                Task uploadInProgress = null;
+
+                while (true)
+                {
+                    try
                     {
                         ConsecutiveDataPointObservationsCollection pageOfUnaggregatedData;
                         do
@@ -87,23 +94,21 @@ namespace DAaVE.Library.DataAggregation
                             uploadInProgress = pageOfUnaggregatedData.ProvideCorrespondingAggregatedData(aggregatedData);
                         }
                     }
-                }
-                catch (Exception e)
-                {
-                    string activityDescription = "aggregating page of data of type: " + type;
-
-                    errorSink.OnError("Exception when " + activityDescription, e);
-
-                    consecutiveErrorCount++;
-                    if (consecutiveErrorCount > 20)
+                    catch (Exception e)
                     {
-                        errorSink.OnError("Too many consecutive errors when " + activityDescription + "; re-throwing", e);
-                        throw;
-                    }
+                        string activityDescription = "aggregation of " + type + " data from " + pager + " using " + aggregator;
+                        errorSink.OnError("Exception during " + activityDescription, e);
 
-                    if (this.shutdownStart.Wait(DataAggregationOrchestrator.SleepDurationOnError))
-                    {
-                        return;
+                        consecutiveErrorCount++;
+                        if (consecutiveErrorCount > 20)
+                        {
+                            errorSink.OnError("Too many consecutive errors during " + activityDescription + "; re-throwing", e);
+                            throw;
+                        }
+                        else if (this.shutdownStart.Wait(DataAggregationOrchestrator.SleepDurationOnError))
+                        {
+                            return;
+                        }
                     }
                 }
             });
@@ -115,6 +120,9 @@ namespace DAaVE.Library.DataAggregation
         public void Dispose()
         {
             this.shutdownStart.Set();
+            
+            // TODO: Fix tests and uncommenmt
+            ////this.worker.Wait();
         }
     }
 }
