@@ -166,36 +166,35 @@ namespace DAaVE.Library.Tests
             }
         }
 
-        // TODO: Fix.
-        /////// <summary>
-        /////// Confirms that exceptions thrown by the pager do not cause a delay that is capable of blocking
-        /////// disposal of the entire <see cref="DataAggregationBackgroundWorker{TDataPointTypeEnum}"/>
-        /////// object.
-        /////// </summary>
-        ////[SuppressMessage(
-        ////    "Microsoft.Globalization",
-        ////    "CA1303:Do not pass literals as localized parameters",
-        ////    MessageId = "DAaVE.Library.Tests.DataAggregationBackgroundWorkerFunctionalTests.AssertTimeSpanBetween(System.TimeSpan,System.TimeSpan,System.TimeSpan,System.String,System.Object[])",
-        ////    Justification = "Proxied to Assert.IsTrue")]
-        ////[TestMethod]
-        ////public void ErrorFromPagerDoesNotInterruptShutdown()
-        ////{
-        ////    Stopwatch stopwatch = Stopwatch.StartNew();
+        /// <summary>
+        /// Confirms that exceptions thrown by the pager do not cause a delay that is capable of blocking
+        /// disposal of the entire <see cref="DataAggregationBackgroundWorker{TDataPointTypeEnum}"/>
+        /// object.
+        /// </summary>
+        [SuppressMessage(
+            "Microsoft.Globalization",
+            "CA1303:Do not pass literals as localized parameters",
+            MessageId = "DAaVE.Library.Tests.DataAggregationBackgroundWorkerFunctionalTests.AssertTimeSpanBetween(System.TimeSpan,System.TimeSpan,System.TimeSpan,System.String,System.Object[])",
+            Justification = "Proxied to Assert.IsTrue")]
+        [TestMethod]
+        public void ErrorFromPagerDoesNotInterruptShutdown()
+        {
+            Stopwatch stopwatch = Stopwatch.StartNew();
 
-        ////    using (DataAggregationBackgroundWorker<SampleDataPointType> target = this.NewTarget())
-        ////    {
-        ////        this.AssertSingleIteration(seed: 03220849);
+            using (DataAggregationBackgroundWorker<SampleDataPointType> target = this.NewTarget())
+            {
+                this.AssertSingleIteration(seed: 03220849);
 
-        ////        this.AssertSingleIteration(seed: 03220850, expectPagerToFail: true);
-        ////    }
+                this.AssertSingleIteration(seed: 03220850, expectPagerToFail: true);
+            }
 
-        ////    AssertTimeSpanBetween(
-        ////        TimeSpan.FromSeconds(0.0),
-        ////        stopwatch.Elapsed,
-        ////        TimeSpan.FromSeconds(0.5),
-        ////        "Pager exceptions should not block shutdown. This test took {0} which appears to have an unexpected delay",
-        ////        stopwatch.Elapsed);
-        ////}
+            AssertTimeSpanBetween(
+                TimeSpan.FromSeconds(0.0),
+                stopwatch.Elapsed,
+                TimeSpan.FromSeconds(2.0),
+                "Pager exceptions should not block shutdown. This test took {0} which appears to have an unexpected delay",
+                stopwatch.Elapsed);
+        }
 
         /// <summary>
         /// Confirms that empty aggregation results are acceptable (when there is a non-empty amount of raw data

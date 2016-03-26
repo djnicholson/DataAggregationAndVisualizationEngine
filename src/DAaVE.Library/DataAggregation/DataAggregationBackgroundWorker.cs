@@ -136,16 +136,23 @@ namespace DAaVE.Library.DataAggregation
         /// <returns>False if disposal was initiated while the task was running, true otherwise.</returns>
         private bool WaitForCompletionOrDisposal(Task task)
         {
+            bool completed = false;
+
             try
             {
                 task.Wait(this.disposeCancellationSource.Token);
+                completed = true;
             }
             catch (OperationCanceledException)
             {
-                return false;
             }
 
-            return true;
+            if (task.IsFaulted)
+            {
+                throw task.Exception;
+            }
+
+            return completed;
         }
 
         /// <summary>
