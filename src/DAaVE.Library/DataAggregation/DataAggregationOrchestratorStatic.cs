@@ -3,7 +3,12 @@
 // </copyright>
 // <summary>See class header.</summary>
 
-[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1649:FileHeaderFileNameDocumentationMustMatchTypeName", Justification = "Can't have it both ways, StyleCop!")]
+using System.Diagnostics.CodeAnalysis;
+
+[assembly: SuppressMessage(
+    "StyleCop.CSharp.DocumentationRules", 
+    "SA1649:FileHeaderFileNameDocumentationMustMatchTypeName", 
+    Justification = "Can't have it both ways, StyleCop!")]
 
 namespace DAaVE.Library.DataAggregation
 {
