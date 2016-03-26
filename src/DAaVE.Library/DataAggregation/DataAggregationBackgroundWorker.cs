@@ -32,12 +32,17 @@ namespace DAaVE.Library.DataAggregation
         /// <summary>
         /// Indicates that aggregation should now cease.
         /// </summary>
-        private readonly ManualResetEventSlim shutdownStart;
+        private readonly CancellationTokenSource disposeCancellationSource;
 
         /// <summary>
         /// Task performing continuous aggregations.
         /// </summary>
         private readonly Task worker;
+
+        /// <summary>
+        /// Amount of consecutive invocations of the main loop within <see cref="worker"/> that have resulted in exception.
+        /// </summary>
+        private int consecutiveErrorCount;
 
         /// <summary>
         /// Initializes a new instance of the DataAggregationBackgroundWorker class.
@@ -52,11 +57,11 @@ namespace DAaVE.Library.DataAggregation
             IDataPointPager<TDataPointTypeEnum> pager,
             IErrorSink errorSink)
         {
-            int consecutiveErrorCount = 0;
+            this.consecutiveErrorCount = 0;
 
-            this.shutdownStart = new ManualResetEventSlim(initialState: false);
+            this.disposeCancellationSource = new CancellationTokenSource();
 
-            this.worker = Task.Run(async () =>
+            this.worker = Task.Run(() =>
             {
                 Task uploadInProgress = null;
 
@@ -67,11 +72,16 @@ namespace DAaVE.Library.DataAggregation
                         ConsecutiveDataPointObservationsCollection pageOfUnaggregatedData;
                         do
                         {
-                            pageOfUnaggregatedData = await pager.GetPageOfObservations(type);
-
+                            Task<ConsecutiveDataPointObservationsCollection> observationRetriever = pager.GetPageOfObservations(type);
+                            if (!this.WaitForCompletionOrDisposal(observationRetriever))
+                            {
+                                return;
+                            }
+                            
+                            pageOfUnaggregatedData = observationRetriever.Result;
                             if (pageOfUnaggregatedData.Count() == 0)
                             {
-                                if (shutdownStart.Wait(DataAggregationOrchestrator.SleepDurationOnDataExhaustion))
+                                if (!this.WaitForCompletionOrDisposal(Task.Delay(DataAggregationOrchestrator.SleepDurationOnDataExhaustion)))
                                 {
                                     return;
                                 }
@@ -87,7 +97,11 @@ namespace DAaVE.Library.DataAggregation
                             {
                                 // Aggregation (CPU heavy) and upload (IO heavy) are allowed to happen in parallel, but only one
                                 // of each at a time.
-                                uploadInProgress.Wait();
+                                if (!this.WaitForCompletionOrDisposal(uploadInProgress))
+                                {
+                                    return;
+                                }
+
                                 consecutiveErrorCount = 0;
                             }
 
@@ -97,17 +111,9 @@ namespace DAaVE.Library.DataAggregation
                     catch (Exception e)
                     {
                         string activityDescription = "aggregation of " + type + " data from " + pager + " using " + aggregator;
-                        errorSink.OnError("Exception during " + activityDescription, e);
-
-                        consecutiveErrorCount++;
-                        if (consecutiveErrorCount > 20)
+                        if (!HandleException(activityDescription, e, errorSink))
                         {
-                            errorSink.OnError("Too many consecutive errors during " + activityDescription + "; re-throwing", e);
                             throw;
-                        }
-                        else if (this.shutdownStart.Wait(DataAggregationOrchestrator.SleepDurationOnError))
-                        {
-                            return;
                         }
                     }
                 }
@@ -119,10 +125,63 @@ namespace DAaVE.Library.DataAggregation
         /// </summary>
         public void Dispose()
         {
-            this.shutdownStart.Set();
-            
-            // TODO: Fix tests and uncommenmt
-            ////this.worker.Wait();
+            this.disposeCancellationSource.Cancel();
+            this.worker.Wait();
+        }
+
+        /// <summary>
+        /// Waits for a task to complete, or disposal to be initiated (whichever happens first).
+        /// </summary>
+        /// <param name="task">An already running (or completed) task.</param>
+        /// <returns>False if disposal was initiated while the task was running, true otherwise.</returns>
+        private bool WaitForCompletionOrDisposal(Task task)
+        {
+            try
+            {
+                task.Wait(this.disposeCancellationSource.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Attempts to gracefully handle exceptions encountered during aggregation.
+        /// </summary>
+        /// <param name="activityDescription">Description of the activity in progress when the exception occurred.</param>
+        /// <param name="exception">An exception encountered during aggregation.</param>
+        /// <param name="errorSink">Used to log error messages.</param>
+        /// <returns>True if the exception was handled; false if not (the caller should re-throw).</returns>
+        private bool HandleException(string activityDescription, Exception exception, IErrorSink errorSink)
+        {
+            AggregateException aggregateException = exception as AggregateException;
+            if (aggregateException != null)
+            {
+                bool handled = true;
+                foreach (Exception innerExcpetion in aggregateException.InnerExceptions)
+                {
+                    handled = handled && this.HandleException(activityDescription, innerExcpetion, errorSink);
+                }
+
+                return handled;
+            }
+
+            errorSink.OnError("Exception during " + activityDescription, exception);
+
+            this.consecutiveErrorCount++;
+            if (this.consecutiveErrorCount > 20)
+            {
+                errorSink.OnError("Too many consecutive errors during " + activityDescription + "; re-throwing", exception);
+                return false;
+            }
+            else
+            {
+                this.WaitForCompletionOrDisposal(Task.Delay(DataAggregationOrchestrator.SleepDurationOnError));
+                return true;
+            }
         }
     }
 }

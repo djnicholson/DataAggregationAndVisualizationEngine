@@ -82,7 +82,8 @@ namespace DAaVE.Library.Tests
 
             this.errorSink = new CallbackErrorSink((message, hasException, exception) =>
             {
-                Debug.Write("ERROR (possibly expected by test): " + message);
+                Debug.Write(
+                    "ERROR (possibly expected by test): '" + message + "'" + (hasException ? "; exception: " + exception : string.Empty));
 
                 Tuple<string, Type> expectedError = WaitDequeue(this.expectedErrors);
 

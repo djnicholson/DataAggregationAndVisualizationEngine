@@ -116,11 +116,13 @@ namespace DAaVE.Library.Tests
         [TestMethod]
         public void EmptyPagesProvidedByPagerDoNotInterruptShutdown()
         {
-            Stopwatch stopwatch = Stopwatch.StartNew();
+            Stopwatch stopwatch = new Stopwatch();
 
             using (DataAggregationBackgroundWorker<SampleDataPointType> target = this.NewTarget())
             {
                 this.AssertSingleIteration(seed: 03220849);
+
+                stopwatch.Start();
 
                 this.AssertSingleIteration(seed: 03220850, noRawData: true);    
             }
@@ -129,7 +131,7 @@ namespace DAaVE.Library.Tests
                 TimeSpan.FromSeconds(0.0),
                 stopwatch.Elapsed,
                 TimeSpan.FromSeconds(0.5),
-                "Empty page delay should not block shutdown. This test took {0} which appears to have an unexpected delay",
+                "Empty page delay should not block shutdown. There was {0} in between the beginning of the empty iteration and the end of disposal.",
                 stopwatch.Elapsed);
         }
 
@@ -250,8 +252,8 @@ namespace DAaVE.Library.Tests
             string message,
             params object[] parameters)
         {
-            Assert.IsTrue(lowerBound < mid, message + " (lowerBound >= mid)", parameters);
-            Assert.IsTrue(mid < upperBound, message + " (mid >= upperBound)", parameters);
+            Assert.IsTrue(lowerBound < mid, message + " (timespan too short; expecting longer than " + lowerBound + ")", parameters);
+            Assert.IsTrue(mid < upperBound, message + " (timespan too long; expecting shorter than " + upperBound + ")", parameters);
         }
 
         /// <summary>

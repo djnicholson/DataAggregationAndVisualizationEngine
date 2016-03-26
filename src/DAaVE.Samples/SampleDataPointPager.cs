@@ -67,13 +67,16 @@ namespace DAaVE.Samples
             Tuple<ConcurrentQueue<Func<ConsecutiveDataPointObservationsCollection>>, SemaphoreSlim> queue =
                 this.pendingObservations.GetOrAdd(type, _ => this.NewDataTypeQueue());
 
-            Func<ConsecutiveDataPointObservationsCollection> result;
-            while (!queue.Item1.TryDequeue(out result))
+            return Task.Run(async () => 
             {
-                queue.Item2.Wait();
-            }
+                Func<ConsecutiveDataPointObservationsCollection> result;
+                while (!queue.Item1.TryDequeue(out result))
+                {
+                    queue.Item2.Wait();
+                }
 
-            return Task.Run(result);
+                return await Task.Run(result);
+            });
         }
 
         /// <summary>
