@@ -268,9 +268,9 @@ namespace DAaVE.Library.Tests
 
             TimeSpan elapsed = timer.Elapsed;
             AssertTimeSpanBetween(
-                TimeSpan.FromSeconds(8.0),
+                TimeSpan.FromSeconds(5.0),
                 elapsed,
-                TimeSpan.FromSeconds(12.0),
+                TimeSpan.FromSeconds(15.0),
                 "Test should be blocked for about 10 seconds, but took {0} to complete",
                 elapsed);
         }
