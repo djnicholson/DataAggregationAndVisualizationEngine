@@ -285,7 +285,7 @@ namespace DAaVE.Library.Tests
             DataPointObservation[] sampleRawData;
             AggregatedDataPoint[] sampleAggregatedData;
             bool isPartial = GenerateSampleData(
-                seed: 03291812,
+                seed: 03291952,
                 sampleRawDataMaximumLength: 1,
                 sampleAggregatedDataMaximumLength: 1,
                 sampleRawData: out sampleRawData,
@@ -341,7 +341,47 @@ namespace DAaVE.Library.Tests
         [TestMethod]
         public void ErrorHandling()
         {
-            // TODO
+            // TODO: Uncomment and fix
+
+            ////bool success = false;
+            ////using (DataAggregationBackgroundWorker<SampleDataPointType> target = this.NewTarget())
+            ////{
+            ////    this.AssertSingleIteration(seed: 03293000, expectPagerToFail: true);
+            ////    this.AssertSingleIteration(seed: 03293001, expectAggregationToFail: true);
+            ////    this.AssertSingleIteration(seed: 03293002, expectFailureStoringResults: true);
+
+            ////    // Reset consecutive error count to zero:
+            ////    this.AssertSingleIteration(seed: 03294000);
+
+            ////    this.AssertSingleIteration(seed: 03292000, expectPagerToFail: true);
+            ////    this.AssertSingleIteration(seed: 03292001, expectAggregationToFail: true);
+            ////    this.AssertSingleIteration(seed: 03292002, expectFailureStoringResults: true);
+            ////    this.AssertSingleIteration(seed: 03292003, expectPagerToFail: true);
+            ////    this.AssertSingleIteration(seed: 03292004, expectAggregationToFail: true);
+            ////    this.AssertSingleIteration(seed: 03292005, expectFailureStoringResults: true);
+            ////    this.AssertSingleIteration(seed: 03292006, expectPagerToFail: true);
+            ////    this.AssertSingleIteration(seed: 03292007, expectAggregationToFail: true);
+            ////    this.AssertSingleIteration(seed: 03292008, expectFailureStoringResults: true);
+            ////    this.AssertSingleIteration(seed: 03292009, expectPagerToFail: true);
+            ////    this.AssertSingleIteration(seed: 03292010, expectAggregationToFail: true);
+            ////    this.AssertSingleIteration(seed: 03292011, expectFailureStoringResults: true);
+            ////    this.AssertSingleIteration(seed: 03292012, expectPagerToFail: true);
+            ////    this.AssertSingleIteration(seed: 03292013, expectAggregationToFail: true);
+            ////    this.AssertSingleIteration(seed: 03292014, expectFailureStoringResults: true);
+            ////    this.AssertSingleIteration(seed: 03292015, expectPagerToFail: true);
+            ////    this.AssertSingleIteration(seed: 03292016, expectAggregationToFail: true);
+            ////    this.AssertSingleIteration(seed: 03292017, expectFailureStoringResults: true);
+            ////    this.AssertSingleIteration(seed: 03292018, expectPagerToFail: true);
+            ////    this.AssertSingleIteration(seed: 03292019, expectAggregationToFail: true);
+
+            ////    success = true;
+
+            ////    this.AssertSingleIteration(seed: 03292020, expectFailureStoringResults: true);
+
+            ////    success = false;
+            ////}
+
+            ////Assert.IsTrue(success, "Only 20 consecutive exceptions are absorbed, any subsequent one is re-thrown");
         }
 
         /// <summary>
@@ -458,12 +498,12 @@ namespace DAaVE.Library.Tests
             }
             else if (expectAggregationToFail)
             {
-                this.PushError("FOO", typeof(DivideByZeroException));
+                this.PushError(errorMessage, typeof(DivideByZeroException));
                 Assert.IsFalse(expectFailureStoringResults, "Result storage won't happen, so cannot fail.");
             }
             else if (expectFailureStoringResults)
             {
-                this.PushError("FOO", typeof(MissingMemberException));
+                this.PushError(errorMessage, typeof(MissingMemberException));
             }
 
             DataPointObservation[] sampleRawData;
@@ -483,11 +523,13 @@ namespace DAaVE.Library.Tests
                     Assert.IsTrue(
                         aggregationResult.SequenceEqual(sampleAggregatedData),
                         "Entire aggregation result should be sent verbatim to the original pager-supplied data set");
-                    aggregationResultReceivedByPagerDataObject.Set();
+                    
                     if (expectFailureStoringResults)
                     {
                         throw new MissingMemberException();
                     }
+
+                    aggregationResultReceivedByPagerDataObject.Set();
                 },
                 isPartial);
 
@@ -521,8 +563,10 @@ namespace DAaVE.Library.Tests
                 return;
             }
 
-            aggregationResultReceivedByPagerDataObject.Wait(Timeout);
-            Assert.IsTrue(aggregationResultReceivedByPagerDataObject.IsSet, "Aggregator results not provided to originating pager data object");
+            if (expectFailureStoringResults)
+            {
+                Assert.IsTrue(aggregationResultReceivedByPagerDataObject.Wait(Timeout), "Aggregator results not provided to originating pager data object");
+            }
         }
     }
 }
