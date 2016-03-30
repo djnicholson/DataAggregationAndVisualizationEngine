@@ -220,10 +220,118 @@ namespace DAaVE.Library.Tests
         /// concurrently, but it is acceptable for a single aggregation computation to happen 
         /// simultaneously with the upload of the previous result.
         /// </summary>
+        [SuppressMessage(
+            "Microsoft.Globalization",
+            "CA1303:Do not pass literals as localized parameters",
+            MessageId = "DAaVE.Library.Tests.DataAggregationBackgroundWorkerFunctionalTests.AssertTimeSpanBetween(System.TimeSpan,System.TimeSpan,System.TimeSpan,System.String,System.Object[])",
+            Justification = "Proxied to Assert.IsTrue")]
         [TestMethod]
         public void AggregationUploadConcurrency()
         {
-            // TODO
+            Stopwatch timer = Stopwatch.StartNew();
+            using (DataAggregationBackgroundWorker<SampleDataPointType> target = this.NewTarget())
+            {
+                DataPointObservation[] sampleRawData;
+                AggregatedDataPoint[] sampleAggregatedData;
+                bool isPartial = GenerateSampleData(
+                    seed: 03291812,
+                    sampleRawDataMaximumLength: 1,
+                    sampleAggregatedDataMaximumLength: 1,
+                    sampleRawData: out sampleRawData,
+                    sampleAggregatedData: out sampleAggregatedData);
+
+                ManualResetEventSlim aggregation1UploadUnblocked = new ManualResetEventSlim(initialState: false);
+                SampleConsecutiveDataPointObservationsCollection dataObject1 = new SampleConsecutiveDataPointObservationsCollection(
+                    sampleRawData.OrderBy(d => d.UtcTimestamp),
+                    aggregationResult => aggregation1UploadUnblocked.Wait(),
+                    isPartial);
+
+                ManualResetEventSlim aggregation2UploadStarted = new ManualResetEventSlim(initialState: false);
+                SampleConsecutiveDataPointObservationsCollection dataObject2 = new SampleConsecutiveDataPointObservationsCollection(
+                    sampleRawData.OrderBy(d => d.UtcTimestamp),
+                    aggregationResult => aggregation2UploadStarted.Set(),
+                    isPartial);
+
+                // Iteration 1:
+                this.ExpectPagerRequest(dataToReturn: dataObject1);
+                this.ExpectAggregationRequestResponse(response: sampleAggregatedData);
+
+                // Iteration 2:
+                this.ExpectPagerRequest(dataToReturn: dataObject2);
+                this.ExpectAggregationRequestResponse(response: sampleAggregatedData);
+                Assert.IsFalse(aggregation2UploadStarted.Wait(TimeSpan.FromSeconds(10.0)), "Only one upload should be allowed at a time.");
+
+                aggregation1UploadUnblocked.Set();
+
+                Assert.IsTrue(aggregation2UploadStarted.Wait(TimeSpan.FromSeconds(10.0)), "Second aggregation did not get unblocked when expected.");
+            }
+
+            TimeSpan elapsed = timer.Elapsed;
+            AssertTimeSpanBetween(
+                TimeSpan.FromSeconds(8.0),
+                elapsed,
+                TimeSpan.FromSeconds(12.0),
+                "Test should be blocked for about 10 seconds, but took {0} to complete",
+                elapsed);
+        }
+
+        /// <summary>
+        /// Asserts the disposing the worker while an upload is still in progress blocks until the upload is
+        /// complete.
+        /// </summary>
+        [TestMethod]
+        public void DisposalDuringUpload()
+        {
+            DataPointObservation[] sampleRawData;
+            AggregatedDataPoint[] sampleAggregatedData;
+            bool isPartial = GenerateSampleData(
+                seed: 03291812,
+                sampleRawDataMaximumLength: 1,
+                sampleAggregatedDataMaximumLength: 1,
+                sampleRawData: out sampleRawData,
+                sampleAggregatedData: out sampleAggregatedData);
+
+            DataAggregationBackgroundWorker<SampleDataPointType> target = this.NewTarget();
+
+            ManualResetEventSlim targetDisposalUnblocked = new ManualResetEventSlim(initialState: false);
+            ManualResetEventSlim aggregationUpload1Started = new ManualResetEventSlim(initialState: false);
+            ManualResetEventSlim aggregationUpload2Started = new ManualResetEventSlim(initialState: false);
+            ManualResetEventSlim aggregationUpload2Unblocked = new ManualResetEventSlim(initialState: false);
+
+            SampleConsecutiveDataPointObservationsCollection dataObject1 = new SampleConsecutiveDataPointObservationsCollection(
+                sampleRawData.OrderBy(d => d.UtcTimestamp),
+                aggregationResult =>
+                {
+                    aggregationUpload1Started.Set();
+                },
+                isPartial);
+
+            SampleConsecutiveDataPointObservationsCollection dataObject2 = new SampleConsecutiveDataPointObservationsCollection(
+                sampleRawData.OrderBy(d => d.UtcTimestamp),
+                aggregationResult =>
+                {
+                    aggregationUpload2Started.Set();
+                    aggregationUpload2Unblocked.Wait();
+                    targetDisposalUnblocked.Set();
+                },
+                isPartial);
+
+            this.ExpectPagerRequest(dataToReturn: dataObject1);
+            this.ExpectAggregationRequestResponse(response: sampleAggregatedData);
+            this.ExpectPagerRequest(dataToReturn: dataObject2);
+            this.ExpectAggregationRequestResponse(response: sampleAggregatedData);
+            Assert.IsTrue(aggregationUpload1Started.Wait(TimeSpan.FromSeconds(5.0)), "Upload 1 should have begun.");
+            Assert.IsTrue(aggregationUpload2Started.Wait(TimeSpan.FromSeconds(5.0)), "Upload 2 should have begun.");
+
+            using (Task disposalTask = Task.Run(() => target.Dispose()))
+            {
+                Assert.IsFalse(disposalTask.Wait(TimeSpan.FromSeconds(5.0)), "Dispose should be blocked.");
+
+                aggregationUpload2Unblocked.Set();
+
+                Assert.IsTrue(targetDisposalUnblocked.Wait(TimeSpan.FromSeconds(5.0)), "Dispose should be unblocked.");
+                Assert.IsTrue(disposalTask.Wait(TimeSpan.FromSeconds(5.0)), "Dispose should terminate.");
+            }
         }
 
         /// <summary>

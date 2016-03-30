@@ -40,6 +40,11 @@ namespace DAaVE.Library.DataAggregation
         private readonly Task worker;
 
         /// <summary>
+        /// Task uploading the results of an aggregation (possibly null).
+        /// </summary>
+        private Task uploadInProgress;
+
+        /// <summary>
         /// Amount of consecutive invocations of the main loop within <see cref="worker"/> that have resulted in exception.
         /// </summary>
         private int consecutiveErrorCount;
@@ -63,8 +68,6 @@ namespace DAaVE.Library.DataAggregation
 
             this.worker = Task.Run(() =>
             {
-                Task uploadInProgress = null;
-
                 while (true)
                 {
                     try
@@ -93,19 +96,15 @@ namespace DAaVE.Library.DataAggregation
 
                         if (aggregatedData.Any())
                         {
-                            if (uploadInProgress != null)
+                            if (this.uploadInProgress != null)
                             {
                                 // Aggregation (CPU heavy) and upload (IO heavy) are allowed to happen in parallel, but only one
                                 // of each at a time.
-                                if (!this.WaitForTaskCompletionOrWorkerDisposal(uploadInProgress))
-                                {
-                                    return;
-                                }
-
+                                this.uploadInProgress.Wait();
                                 consecutiveErrorCount = 0;
                             }
 
-                            uploadInProgress = pageOfUnaggregatedData.ProvideCorrespondingAggregatedData(aggregatedData);
+                            this.uploadInProgress = pageOfUnaggregatedData.ProvideCorrespondingAggregatedData(aggregatedData);
                         }
                     }
                     catch (Exception e)
@@ -121,12 +120,21 @@ namespace DAaVE.Library.DataAggregation
         }
 
         /// <summary>
-        /// Trigger a shutdown after any currently active polls return.
+        /// Trigger a shutdown after any in-progress aggregation computations and/or aggregation uploads complete.
         /// </summary>
         public void Dispose()
         {
             this.disposeCancellationSource.Cancel();
+
             this.worker.Wait();
+
+            if (this.uploadInProgress != null)
+            {
+                this.uploadInProgress.Wait();
+                this.uploadInProgress.Dispose();
+            }
+
+            this.worker.Dispose();
         }
 
         /// <summary>
