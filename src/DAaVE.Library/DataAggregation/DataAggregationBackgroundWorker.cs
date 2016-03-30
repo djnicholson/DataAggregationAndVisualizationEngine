@@ -73,7 +73,7 @@ namespace DAaVE.Library.DataAggregation
                         do
                         {
                             Task<ConsecutiveDataPointObservationsCollection> observationRetriever = pager.GetPageOfObservations(type);
-                            if (!this.WaitForCompletionOrDisposal(observationRetriever))
+                            if (!this.WaitForTaskCompletionOrWorkerDisposal(observationRetriever))
                             {
                                 return;
                             }
@@ -81,7 +81,7 @@ namespace DAaVE.Library.DataAggregation
                             pageOfUnaggregatedData = observationRetriever.Result;
                             if (pageOfUnaggregatedData.Count() == 0)
                             {
-                                if (!this.WaitForCompletionOrDisposal(Task.Delay(DataAggregationOrchestrator.SleepDurationOnDataExhaustion)))
+                                if (!this.WaitForTaskCompletionOrWorkerDisposal(Task.Delay(DataAggregationOrchestrator.SleepDurationOnDataExhaustion)))
                                 {
                                     return;
                                 }
@@ -97,7 +97,7 @@ namespace DAaVE.Library.DataAggregation
                             {
                                 // Aggregation (CPU heavy) and upload (IO heavy) are allowed to happen in parallel, but only one
                                 // of each at a time.
-                                if (!this.WaitForCompletionOrDisposal(uploadInProgress))
+                                if (!this.WaitForTaskCompletionOrWorkerDisposal(uploadInProgress))
                                 {
                                     return;
                                 }
@@ -134,7 +134,7 @@ namespace DAaVE.Library.DataAggregation
         /// </summary>
         /// <param name="task">An already running (or completed) task.</param>
         /// <returns>False if disposal was initiated while the task was running, true otherwise.</returns>
-        private bool WaitForCompletionOrDisposal(Task task)
+        private bool WaitForTaskCompletionOrWorkerDisposal(Task task)
         {
             bool completed = false;
 
@@ -186,7 +186,7 @@ namespace DAaVE.Library.DataAggregation
             }
             else
             {
-                this.WaitForCompletionOrDisposal(Task.Delay(DataAggregationOrchestrator.SleepDurationOnError));
+                this.WaitForTaskCompletionOrWorkerDisposal(Task.Delay(DataAggregationOrchestrator.SleepDurationOnError));
                 return true;
             }
         }
