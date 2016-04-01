@@ -8,7 +8,6 @@ namespace DAaVE.Samples
     using System;
     using System.Collections.Concurrent;
     using System.Diagnostics.CodeAnalysis;
-    using System.Threading;
     using System.Threading.Tasks;
 
     using DAaVE.Library.Storage;
@@ -25,22 +24,22 @@ namespace DAaVE.Samples
         /// A dictionary to store a queue (and a corresponding semaphore used to signal new items) for each data
         /// point type that is used.
         /// </summary>
-        private ConcurrentDictionary<TDataPointTypeEnum, Tuple<ConcurrentQueue<Func<ConsecutiveDataPointObservationsCollection>>, SemaphoreSlim>> pendingObservations;
+        private ConcurrentDictionary<TDataPointTypeEnum, BlockingCollection<Func<ConsecutiveDataPointObservationsCollection>>> pageProducerQueues;
 
         /// <summary>
-        /// All semaphores created by this object.
+        /// All disposable objects created.
         /// </summary>
-        private ConcurrentQueue<SemaphoreSlim> semaphoresCreated;
+        private ConcurrentQueue<IDisposable> ownedDisposables;
 
         /// <summary>
         /// Initializes a new instance of the SampleDataPointPager class. Initially no data is available.
         /// </summary>
         public SampleDataPointPager()
         {
-            this.pendingObservations = 
-                new ConcurrentDictionary<TDataPointTypeEnum, Tuple<ConcurrentQueue<Func<ConsecutiveDataPointObservationsCollection>>, SemaphoreSlim>>();
+            this.pageProducerQueues =
+                new ConcurrentDictionary<TDataPointTypeEnum, BlockingCollection<Func<ConsecutiveDataPointObservationsCollection>>>();
 
-            this.semaphoresCreated = new ConcurrentQueue<SemaphoreSlim>();
+            this.ownedDisposables = new ConcurrentQueue<IDisposable>();
         }
 
         /// <summary>
@@ -54,28 +53,22 @@ namespace DAaVE.Samples
         /// </param>
         public void QueueObservation(TDataPointTypeEnum type, Func<ConsecutiveDataPointObservationsCollection> observation)
         {
-            Tuple<ConcurrentQueue<Func<ConsecutiveDataPointObservationsCollection>>, SemaphoreSlim> queue =
-                this.pendingObservations.GetOrAdd(type, _ => this.NewDataTypeQueue());
+            BlockingCollection<Func<ConsecutiveDataPointObservationsCollection>> queue =
+                this.pageProducerQueues.GetOrAdd(type, _ => this.NewDataTypeQueue());
 
-            queue.Item1.Enqueue(observation);
-            queue.Item2.Release();
+            queue.Add(observation);
         }
 
         /// <inheritdoc/>
         public Task<ConsecutiveDataPointObservationsCollection> GetPageOfObservations(TDataPointTypeEnum type)
         {
-            Tuple<ConcurrentQueue<Func<ConsecutiveDataPointObservationsCollection>>, SemaphoreSlim> queue =
-                this.pendingObservations.GetOrAdd(type, _ => this.NewDataTypeQueue());
+            BlockingCollection<Func<ConsecutiveDataPointObservationsCollection>> pageProducerQueue =
+                this.pageProducerQueues.GetOrAdd(type, _ => this.NewDataTypeQueue());
 
-            return Task.Run(async () => 
+            return Task.Run(() => 
             {
-                Func<ConsecutiveDataPointObservationsCollection> result;
-                while (!queue.Item1.TryDequeue(out result))
-                {
-                    queue.Item2.Wait();
-                }
-
-                return await Task.Run(result);
+                Func<ConsecutiveDataPointObservationsCollection> pageProducer = pageProducerQueue.Take();
+                return pageProducer();
             });
         }
 
@@ -84,9 +77,9 @@ namespace DAaVE.Samples
         /// </summary>
         public void Dispose()
         {
-            foreach (SemaphoreSlim semaphore in this.semaphoresCreated)
+            foreach (IDisposable disposable in this.ownedDisposables)
             {
-                semaphore.Dispose();
+                disposable.Dispose();
             }
         }
 
@@ -95,15 +88,13 @@ namespace DAaVE.Samples
         /// data point type.
         /// </summary>
         /// <returns>A new (queue, semaphore) tuple.</returns>
-        [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Semaphore owned by class.")]
-        private Tuple<ConcurrentQueue<Func<ConsecutiveDataPointObservationsCollection>>, SemaphoreSlim> NewDataTypeQueue()
+        [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Disposables owned by class.")]
+        private BlockingCollection<Func<ConsecutiveDataPointObservationsCollection>> NewDataTypeQueue()
         {
-            SemaphoreSlim semaphore = new SemaphoreSlim(0);
-            this.semaphoresCreated.Enqueue(semaphore);
-
-            return new Tuple<ConcurrentQueue<Func<ConsecutiveDataPointObservationsCollection>>, SemaphoreSlim>(
-                new ConcurrentQueue<Func<ConsecutiveDataPointObservationsCollection>>(),
-                semaphore);
+            var result = new BlockingCollection<Func<ConsecutiveDataPointObservationsCollection>>(
+                new ConcurrentQueue<Func<ConsecutiveDataPointObservationsCollection>>());
+            this.ownedDisposables.Enqueue(result);
+            return result;
         }
     }
 }

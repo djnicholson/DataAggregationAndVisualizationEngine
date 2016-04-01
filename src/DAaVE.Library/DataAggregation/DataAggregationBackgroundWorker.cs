@@ -101,6 +101,8 @@ namespace DAaVE.Library.DataAggregation
                                 // Aggregation (CPU heavy) and upload (IO heavy) are allowed to happen in parallel, but only one
                                 // of each at a time.
                                 this.uploadInProgress.Wait();
+                                this.uploadInProgress.Dispose();
+
                                 consecutiveErrorCount = 0;
                             }
 

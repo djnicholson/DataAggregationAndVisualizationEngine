@@ -44,17 +44,17 @@ namespace DAaVE.Library.Tests
         /// <summary>
         /// All incoming aggregation requests that are not yet reconciled with an expected request.
         /// </summary>
-        private ConcurrentQueue<ConsecutiveDataPointObservationsCollection> aggregationRequests;
+        private BlockingCollection<ConsecutiveDataPointObservationsCollection> aggregationRequests;
 
         /// <summary>
-        /// Responses that can be given to aggregation requests.
+        /// Generators (that may throw) of responses that can be given to aggregation requests.
         /// </summary>
-        private ConcurrentQueue<IEnumerable<AggregatedDataPoint>> aggregationResponses;
+        private BlockingCollection<Func<IEnumerable<AggregatedDataPoint>>> aggregationResponseGenerators;
 
         /// <summary>
         /// Expected errors.
         /// </summary>
-        private ConcurrentQueue<Tuple<string, Type>> expectedErrors;
+        private BlockingCollection<Tuple<string, Type>> expectedErrors;
 
         /// <summary>
         /// Verifications to perform (on the main test thread) after the test completes.
@@ -75,17 +75,17 @@ namespace DAaVE.Library.Tests
 
             this.aggregator = new SampleDataPointAggregator(aggregationRequest =>
             {
-                this.aggregationRequests.Enqueue(aggregationRequest);
-
-                return WaitDequeue(this.aggregationResponses);
+                this.aggregationRequests.Add(aggregationRequest);
+                Func<IEnumerable<AggregatedDataPoint>> aggregationGenerator = this.aggregationResponseGenerators.Take();
+                return aggregationGenerator();
             });
 
             this.errorSink = new CallbackErrorSink((message, hasException, exception) =>
             {
-                Debug.Write(
+                Debug.WriteLine(
                     "ERROR (possibly expected by test): '" + message + "'" + (hasException ? "; exception: " + exception : string.Empty));
 
-                Tuple<string, Type> expectedError = WaitDequeue(this.expectedErrors);
+                Tuple<string, Type> expectedError = this.expectedErrors.Take();
 
                 postTestVerifications.Enqueue(() => 
                 { 
@@ -105,11 +105,11 @@ namespace DAaVE.Library.Tests
         [TestInitialize]
         public void BeforeIndividualTest()
         {
-            this.aggregationRequests = new ConcurrentQueue<ConsecutiveDataPointObservationsCollection>();
+            this.aggregationRequests = new BlockingCollection<ConsecutiveDataPointObservationsCollection>(new ConcurrentQueue<ConsecutiveDataPointObservationsCollection>());
 
-            this.aggregationResponses = new ConcurrentQueue<IEnumerable<AggregatedDataPoint>>();
+            this.aggregationResponseGenerators = new BlockingCollection<Func<IEnumerable<AggregatedDataPoint>>>(new ConcurrentQueue<Func<IEnumerable<AggregatedDataPoint>>>());
 
-            this.expectedErrors = new ConcurrentQueue<Tuple<string, Type>>();
+            this.expectedErrors = new BlockingCollection<Tuple<string, Type>>(new ConcurrentQueue<Tuple<string, Type>>());
 
             this.postTestVerifications = new ConcurrentQueue<Action>();
         }
@@ -127,7 +127,7 @@ namespace DAaVE.Library.Tests
             }
 
             Assert.AreEqual(0, this.aggregationRequests.Count, "An expected aggregation request did not happen");
-            Assert.AreEqual(0, this.aggregationResponses.Count, "An aggregation request was not responded to as requested by the test");
+            Assert.AreEqual(0, this.aggregationResponseGenerators.Count, "An aggregation request was not responded to as requested by the test");
             Assert.AreEqual(0, this.expectedErrors.Count, "An expected error did not happen");
         }
 
@@ -136,6 +136,9 @@ namespace DAaVE.Library.Tests
         /// </summary>
         public void Dispose()
         {
+            this.aggregationRequests.Dispose();
+            this.aggregationResponseGenerators.Dispose();
+            this.expectedErrors.Dispose();
             this.pager.Dispose();
         }
 
@@ -151,56 +154,24 @@ namespace DAaVE.Library.Tests
         /// Must not be null but can be empty. Providing objects that have a suitable
         /// <see cref="object.ToString"/> overload is recommended.
         /// </param>
-        private static void RunWithTimeout(Action action, params object[] context)
+        private static void RunWithDebuggingContext(Action action, params object[] context)
         {
-            Debug.WriteLine("Enter: DataAggregationBackgroundWorkerFunctionalTests.RunWithTimeout");
+            Debug.WriteLine("// ~~ RunWithDebuggingContext [[[[");
 
-            Assert.IsNotNull(action);
-            Assert.IsNotNull(context);
-
-            string contextAsString = string.Join(string.Empty, context);
-            Debug.WriteLine("Context: " + contextAsString);
-
-            using (Task worker = Task.Run(action))
+            try
             {
-                try
-                {
-                    bool actionCompletedWithinTimeout = worker.Wait(Timeout);
-                    if (!actionCompletedWithinTimeout)
-                    {
-                        Assert.Fail(
-                            "An expectation within this test is not yet realized. The condition was first expected about " + Timeout +
-                            " ago though, so the test has been marked as 'failed' to ease identification of the specific expectation that may need" +
-                            " investigation. The stack trace of this failure will identify the location within the test-code that has the expectation" +
-                            " . The following context may be useful in further debugging: " + contextAsString);
-                    }
-                }
-                finally
-                {
-                    worker.Wait();
-                }
+                Assert.IsNotNull(action);
+                Assert.IsNotNull(context);
+
+                string contextAsString = string.Join(string.Empty, context);
+                Debug.WriteLine("// Context: " + contextAsString);
+
+                action();
             }
-
-            Debug.WriteLine("Success: DataAggregationBackgroundWorkerFunctionalTests.RunWithTimeout");
-        }
-
-        /// <summary>
-        /// Blocks until the provided queue is non-empty then returns the first item
-        /// in the queue.
-        /// </summary>
-        /// <typeparam name="T">Type of item in the queue.</typeparam>
-        /// <param name="queue">The queue.</param>
-        /// <returns>The first item in the queue.</returns>
-        private static T WaitDequeue<T>(ConcurrentQueue<T> queue)
-        {
-            T result;
-            while (!queue.TryDequeue(out result))
+            finally
             {
-                // TODO: Replace Thread.Sleep with a synchronization primitive.
-                Thread.Sleep(TimeSpan.FromMilliseconds(100.0));
+                Debug.WriteLine("// ~~ RunWithDebuggingContext ]]]]");
             }
-
-            return result;
         }
 
         /// <summary>
@@ -225,7 +196,7 @@ namespace DAaVE.Library.Tests
         {
             Assert.IsNotNull(dataToReturn);
 
-            RunWithTimeout(
+            RunWithDebuggingContext(
                 () =>
                 {
                     ManualResetEventSlim success = new ManualResetEventSlim(initialState: false);
@@ -252,7 +223,7 @@ namespace DAaVE.Library.Tests
         {
             Assert.IsNotNull(exceptionToThrow);
 
-            RunWithTimeout(
+            RunWithDebuggingContext(
                 () =>
                 {
                     ManualResetEventSlim invoked = new ManualResetEventSlim(initialState: false);
@@ -287,11 +258,11 @@ namespace DAaVE.Library.Tests
 
             ConsecutiveDataPointObservationsCollection unaggregatedData = null;
 
-            RunWithTimeout(
+            RunWithDebuggingContext(
                 () => 
                 {
-                    unaggregatedData = WaitDequeue(this.aggregationRequests);
-                    this.aggregationResponses.Enqueue(response);
+                    this.aggregationResponseGenerators.Add(() => response);
+                    unaggregatedData = this.aggregationRequests.Take();
                 },
                 "Awaiting invocation of the aggregator; planning to return: [",
                 response,
@@ -318,11 +289,11 @@ namespace DAaVE.Library.Tests
 
             ConsecutiveDataPointObservationsCollection unaggregatedData = null;
 
-            RunWithTimeout(
+            RunWithDebuggingContext(
                 () =>
                 {
-                    unaggregatedData = WaitDequeue(this.aggregationRequests);
-                    throw exceptionToThrow;
+                    unaggregatedData = this.aggregationRequests.Take();
+                    this.aggregationResponseGenerators.Add(() => { throw exceptionToThrow; });
                 },
                 "Awaiting invocation of the aggregator; planning to throw: [",
                 exceptionToThrow,
@@ -345,7 +316,7 @@ namespace DAaVE.Library.Tests
         {
             Assert.IsNotNull(errorMessage);
 
-            this.expectedErrors.Enqueue(new Tuple<string, Type>(errorMessage, exceptionType));
+            this.expectedErrors.Add(new Tuple<string, Type>(errorMessage, exceptionType));
         }
 
         /// <summary>
