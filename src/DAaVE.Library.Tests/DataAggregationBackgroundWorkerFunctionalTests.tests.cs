@@ -334,55 +334,58 @@ namespace DAaVE.Library.Tests
             }
         }
 
-        /// <summary>
-        /// At most 20 consecutive exceptions are acceptable during aggregation (each one will
-        /// be reported to the error sink and cause a deliberate delay, but not stop the worker).
-        /// </summary>
-        [TestMethod]
-        public void ErrorHandling()
-        {
-            // TODO: Uncomment and fix
+        /////// <summary>
+        /////// At most 20 consecutive exceptions are acceptable during aggregation (each one will
+        /////// be reported to the error sink and cause a deliberate delay, but not stop the worker).
+        /////// </summary>
+        ////[TestMethod]
+        ////[Timeout(1000000)] // TODO: Confirm this works (or make it work), then add hooks to hit this scenario quicker.
+        ////public void ErrorHandling()
+        ////{
+        ////    bool success = false;
+        ////    using (DataAggregationBackgroundWorker<SampleDataPointType> target = this.NewTarget())
+        ////    {
+        ////        this.AssertSingleIteration(seed: 03293000, expectPagerToFail: true);
+        ////        this.AssertSingleIteration(seed: 03293001, expectAggregationToFail: true);
+        ////        this.AssertSingleIteration(seed: 03293002, expectPagerToFail: true);
 
-            ////bool success = false;
-            ////using (DataAggregationBackgroundWorker<SampleDataPointType> target = this.NewTarget())
-            ////{
-            ////    this.AssertSingleIteration(seed: 03293000, expectPagerToFail: true);
-            ////    this.AssertSingleIteration(seed: 03293001, expectAggregationToFail: true);
-            ////    this.AssertSingleIteration(seed: 03293002, expectFailureStoringResults: true);
+        ////        // Reset consecutive error count to zero:
+        ////        this.AssertSingleIteration(seed: 03294000);
 
-            ////    // Reset consecutive error count to zero:
-            ////    this.AssertSingleIteration(seed: 03294000);
+        ////        // TODO: Not currently covering expectFailureStoringResults (as the way this test framework is hooked up is 
+        ////        // leading to undesired behavior using expectFailureStoringResults adjacent to other error conditions (as 
+        ////        // throwing of the exception is delayed, possibly until disposal.
 
-            ////    this.AssertSingleIteration(seed: 03292000, expectPagerToFail: true);
-            ////    this.AssertSingleIteration(seed: 03292001, expectAggregationToFail: true);
-            ////    this.AssertSingleIteration(seed: 03292002, expectFailureStoringResults: true);
-            ////    this.AssertSingleIteration(seed: 03292003, expectPagerToFail: true);
-            ////    this.AssertSingleIteration(seed: 03292004, expectAggregationToFail: true);
-            ////    this.AssertSingleIteration(seed: 03292005, expectFailureStoringResults: true);
-            ////    this.AssertSingleIteration(seed: 03292006, expectPagerToFail: true);
-            ////    this.AssertSingleIteration(seed: 03292007, expectAggregationToFail: true);
-            ////    this.AssertSingleIteration(seed: 03292008, expectFailureStoringResults: true);
-            ////    this.AssertSingleIteration(seed: 03292009, expectPagerToFail: true);
-            ////    this.AssertSingleIteration(seed: 03292010, expectAggregationToFail: true);
-            ////    this.AssertSingleIteration(seed: 03292011, expectFailureStoringResults: true);
-            ////    this.AssertSingleIteration(seed: 03292012, expectPagerToFail: true);
-            ////    this.AssertSingleIteration(seed: 03292013, expectAggregationToFail: true);
-            ////    this.AssertSingleIteration(seed: 03292014, expectFailureStoringResults: true);
-            ////    this.AssertSingleIteration(seed: 03292015, expectPagerToFail: true);
-            ////    this.AssertSingleIteration(seed: 03292016, expectAggregationToFail: true);
-            ////    this.AssertSingleIteration(seed: 03292017, expectFailureStoringResults: true);
-            ////    this.AssertSingleIteration(seed: 03292018, expectPagerToFail: true);
-            ////    this.AssertSingleIteration(seed: 03292019, expectAggregationToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292000, expectAggregationToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292001, expectPagerToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292002, expectAggregationToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292003, expectPagerToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292004, expectAggregationToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292005, expectPagerToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292006, expectAggregationToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292007, expectPagerToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292008, expectAggregationToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292009, expectPagerToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292010, expectAggregationToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292011, expectPagerToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292012, expectAggregationToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292013, expectPagerToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292014, expectAggregationToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292015, expectPagerToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292016, expectAggregationToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292017, expectPagerToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292018, expectAggregationToFail: true);
+        ////        this.AssertSingleIteration(seed: 03292019, expectPagerToFail: true);
 
-            ////    success = true;
+        ////        success = true;
 
-            ////    this.AssertSingleIteration(seed: 03292020, expectFailureStoringResults: true);
+        ////        this.AssertSingleIteration(seed: 03292020, expectPagerToFail: true);
 
-            ////    success = false;
-            ////}
+        ////        success = false;
+        ////    }
 
-            ////Assert.IsTrue(success, "Only 20 consecutive exceptions are absorbed, any subsequent one is re-thrown");
-        }
+        ////    Assert.IsTrue(success, "Only 20 consecutive exceptions are absorbed, any subsequent one is re-thrown");
+        ////}
 
         /// <summary>
         /// Asserts that three <see cref="TimeSpan"/> values are strictly increasing.
@@ -557,13 +560,17 @@ namespace DAaVE.Library.Tests
                 dataProvidedToAggregator.SequenceEqual(sampleRawData.OrderBy(d => d.UtcTimestamp)),
                 "Entire pager output should be passed verbatim as a single data-set to the aggregator for aggregation");
 
-            if (noAggregatedData || expectAggregationToFail)
+            if (noAggregatedData || expectAggregationToFail) 
             {
                 // No aggregation results to report.
+                this.postTestVerifications.Enqueue(() => 
+                {
+                    Assert.IsFalse(aggregationResultReceivedByPagerDataObject.IsSet, "Unexpected aggregator results provided to pager data object");
+                });
                 return;
             }
 
-            if (expectFailureStoringResults)
+            if (!expectFailureStoringResults)
             {
                 Assert.IsTrue(aggregationResultReceivedByPagerDataObject.Wait(Timeout), "Aggregator results not provided to originating pager data object");
             }
