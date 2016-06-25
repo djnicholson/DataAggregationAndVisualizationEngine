@@ -37,7 +37,7 @@ namespace DAaVE.Library.DataAggregation
         /// <summary>
         /// Task performing continuous aggregations.
         /// </summary>
-        private readonly Task worker;
+        private Task worker;
 
         /// <summary>
         /// Task uploading the results of an aggregation (possibly null).
@@ -102,12 +102,12 @@ namespace DAaVE.Library.DataAggregation
                                 // of each at a time.
                                 this.uploadInProgress.Wait();
                                 this.uploadInProgress.Dispose();
-
-                                consecutiveErrorCount = 0;
                             }
 
                             this.uploadInProgress = pageOfUnaggregatedData.ProvideCorrespondingAggregatedData(aggregatedData);
                         }
+
+                        this.consecutiveErrorCount = 0;
                     }
                     catch (Exception e)
                     {
@@ -128,15 +128,19 @@ namespace DAaVE.Library.DataAggregation
         {
             this.disposeCancellationSource.Cancel();
 
-            this.worker.Wait();
+            if (this.worker != null)
+            {
+                this.worker.Wait();
+                this.worker.Dispose();
+                this.worker = null;
+            }
 
             if (this.uploadInProgress != null)
             {
                 this.uploadInProgress.Wait();
                 this.uploadInProgress.Dispose();
+                this.uploadInProgress = null;
             }
-
-            this.worker.Dispose();
         }
 
         /// <summary>
@@ -189,7 +193,7 @@ namespace DAaVE.Library.DataAggregation
             errorSink.OnError("Exception during " + activityDescription, exception);
 
             this.consecutiveErrorCount++;
-            if (this.consecutiveErrorCount > 20)
+            if (this.consecutiveErrorCount == 20)
             {
                 errorSink.OnError("Too many consecutive errors during " + activityDescription + "; re-throwing", exception);
                 return false;
