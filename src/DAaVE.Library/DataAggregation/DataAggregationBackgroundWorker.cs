@@ -145,6 +145,7 @@ namespace DAaVE.Library.DataAggregation
 
         /// <summary>
         /// Waits for a task to complete, or disposal to be initiated (whichever happens first).
+        /// Throws if the task faults while being awaited.
         /// </summary>
         /// <param name="task">An already running (or completed) task.</param>
         /// <returns>False if disposal was initiated while the task was running, true otherwise.</returns>
@@ -159,11 +160,6 @@ namespace DAaVE.Library.DataAggregation
             }
             catch (OperationCanceledException)
             {
-            }
-
-            if (task.IsFaulted)
-            {
-                throw task.Exception;
             }
 
             return completed;
@@ -181,13 +177,7 @@ namespace DAaVE.Library.DataAggregation
             AggregateException aggregateException = exception as AggregateException;
             if (aggregateException != null)
             {
-                bool handled = true;
-                foreach (Exception innerExcpetion in aggregateException.InnerExceptions)
-                {
-                    handled = handled && this.HandleException(activityDescription, innerExcpetion, errorSink);
-                }
-
-                return handled;
+                return aggregateException.InnerExceptions.All(e => this.HandleException(activityDescription, e, errorSink));
             }
 
             errorSink.OnError("Exception during " + activityDescription, exception);
